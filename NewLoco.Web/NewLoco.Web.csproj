@@ -17,4 +17,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\NewLoco.Data\NewLoco.Data.csproj" />
+    <ProjectReference Include="..\NewLoco.Web.ViewModels\NewLoco.Web.ViewModels.csproj" />
+  </ItemGroup>
+
 </Project>

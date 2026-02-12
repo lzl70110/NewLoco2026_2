@@ -1,0 +1,61 @@
+﻿|-- GCommon
+  |-- EntityValidationConstants.cs
+  |-- Enums
+    |-- LocomotiveType.cs
+    |-- MeasuringUnits.cs
+    |-- Shift.cs
+|-- NewLoco.Data
+|-- NewLoco.Data.Models
+  |-- Fuel.cs
+  |-- Locomotive.cs
+  |-- ShiftWork.cs
+  |-- Configuration
+    |-- LocomotiveEntityConfiguration.cs
+  |-- LocoDbContext.cs
+  |-- Migrations
+    |-- 20260212125005_initial.cs
+    |-- 20260212125005_initial.Designer.cs
+    |-- LocoDbContextModelSnapshot.cs
+|-- NewLoco.Web
+|-- NewLoco.Web.ViewModels
+  |-- ErrorViewModel.cs
+  |-- appsettings.Development.json
+  |-- appsettings.json
+  |-- Areas
+    |-- Identity
+      |-- Pages
+        |-- _ValidationScriptsPartial.cshtml
+        |-- _ViewImports.cshtml
+        |-- _ViewStart.cshtml
+        |-- Account
+          |-- _ViewImports.cshtml
+          |-- Login.cshtml
+          |-- Login.cshtml.cs
+          |-- Logout.cshtml
+          |-- Logout.cshtml.cs
+          |-- Register.cshtml
+          |-- Register.cshtml.cs
+  |-- Controllers
+    |-- HomeController.cs
+  |-- Program.cs
+  |-- Properties
+    |-- launchSettings.json
+    |-- serviceDependencies.json
+    |-- serviceDependencies.local.json
+  |-- Views
+    |-- _ViewImports.cshtml
+    |-- _ViewStart.cshtml
+    |-- Home
+      |-- Index.cshtml
+      |-- Privacy.cshtml
+    |-- Shared
+      |-- _Layout.cshtml
+      |-- _LoginPartial.cshtml
+      |-- _ValidationScriptsPartial.cshtml
+      |-- Error.cshtml
+  |-- wwwroot
+    |-- css
+    |-- js
+|-- NewLoco2026_2.sln
+|-- ProjectTreeExporter.deps.json
+|-- ProjectTreeExporter.runtimeconfig.json

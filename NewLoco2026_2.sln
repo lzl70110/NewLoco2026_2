@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GCommon", "GCommon\GCommon.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewLoco.Data", "NewLoco.Data\NewLoco.Data.csproj", "{08EE1F47-1EAA-5C7B-6169-EF6B978745EC}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Servicses", "Servicses", "{F30B5A16-D2EE-4226-ABA5-09DF4423B328}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewLoco.Service.Core", "NewLoco.Service.Core\NewLoco.Service.Core.csproj", "{C26E750E-A7F7-4A83-A482-ED59BAF8EDBE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,10 @@ Global
 		{08EE1F47-1EAA-5C7B-6169-EF6B978745EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08EE1F47-1EAA-5C7B-6169-EF6B978745EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08EE1F47-1EAA-5C7B-6169-EF6B978745EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C26E750E-A7F7-4A83-A482-ED59BAF8EDBE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C26E750E-A7F7-4A83-A482-ED59BAF8EDBE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C26E750E-A7F7-4A83-A482-ED59BAF8EDBE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C26E750E-A7F7-4A83-A482-ED59BAF8EDBE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -52,6 +60,7 @@ Global
 		{92FC170A-2E5E-4D17-8165-DFD1FA0716DA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{AEF1E8A4-3E2E-4396-A672-EC9E4ECF0E9B} = {F262E3CD-B3E1-426A-AA51-71486F14B4A9}
 		{08EE1F47-1EAA-5C7B-6169-EF6B978745EC} = {F262E3CD-B3E1-426A-AA51-71486F14B4A9}
+		{C26E750E-A7F7-4A83-A482-ED59BAF8EDBE} = {F30B5A16-D2EE-4226-ABA5-09DF4423B328}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0D7DFE6C-64A3-4783-8450-DA16E5D729E6}

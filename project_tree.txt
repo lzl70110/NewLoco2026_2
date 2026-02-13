@@ -6,22 +6,44 @@
     |-- Shift.cs
 |-- NewLoco.Data
 |-- NewLoco.Data.Models
+  |-- BaseEntity.cs
   |-- Fuel.cs
   |-- Locomotive.cs
   |-- ShiftWork.cs
   |-- Configuration
+    |-- FuelConfiguration.cs
     |-- LocomotiveEntityConfiguration.cs
+    |-- ShiftWorkConfiguration.cs
   |-- LocoDbContext.cs
   |-- Migrations
     |-- 20260212125005_initial.cs
     |-- 20260212125005_initial.Designer.cs
+    |-- 20260212204449_AdedEntities.cs
+    |-- 20260212204449_AdedEntities.Designer.cs
+    |-- 20260212230557_SeedSampleLocomotivesAndData.cs
+    |-- 20260212230557_SeedSampleLocomotivesAndData.Designer.cs
     |-- LocoDbContextModelSnapshot.cs
 |-- NewLoco.Web
 |-- NewLoco.Web.ViewModels
   |-- ErrorViewModel.cs
+  |-- Locomotives
+    |-- CreateLocomotiveViewModel.cs
+    |-- EditLocomotiveViewModel.cs
+    |-- LocomotiveDetailsViewModel.cs
+    |-- LocomotiveFormModel.cs
+    |-- LocomotiveNumberViewModel.cs
   |-- appsettings.Development.json
   |-- appsettings.json
   |-- Areas
+    |-- Admin
+      |-- Controllers
+        |-- LocomotivesController.cs
+      |-- Views
+        |-- _ViewStart.cshtml
+        |-- Locomotives
+          |-- Index.cshtml
+        |-- Shared
+          |-- _Layout.cshtml
     |-- Identity
       |-- Pages
         |-- _ValidationScriptsPartial.cshtml
@@ -37,6 +59,7 @@
           |-- Register.cshtml.cs
   |-- Controllers
     |-- HomeController.cs
+    |-- LocomotiveController.cs
   |-- Program.cs
   |-- Properties
     |-- launchSettings.json
@@ -48,6 +71,9 @@
     |-- Home
       |-- Index.cshtml
       |-- Privacy.cshtml
+    |-- Locomotives
+      |-- Details.cshtml
+      |-- Index.cshtml
     |-- Shared
       |-- _Layout.cshtml
       |-- _LoginPartial.cshtml

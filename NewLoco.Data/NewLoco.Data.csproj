@@ -16,10 +16,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Migrations\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\GCommon\GCommon.csproj" />
     <ProjectReference Include="..\NewLoco.Data.Models\NewLoco.Data.Models.csproj" />
   </ItemGroup>

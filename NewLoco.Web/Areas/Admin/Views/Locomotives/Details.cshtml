@@ -1,0 +1,61 @@
+﻿@model NewLoco.Web.ViewModels.Locomotives.LocomotiveDetailsViewModel
+@using NewLoco.GCommon.Enums
+
+<h2>Locomotive Details</h2>
+
+<div class="mb-3">
+    <dl class="row">
+        <dt class="col-sm-2">Number</dt>
+        <dd class="col-sm-10">@Model.Number</dd>
+
+        <dt class="col-sm-2">Type</dt>
+        <dd class="col-sm-10">@Model.LocomotiveType</dd>
+
+        <dt class="col-sm-2">Unit</dt>
+        <dd class="col-sm-10">@Model.MeasuringUnit</dd>
+
+        <dt class="col-sm-2">Created By</dt>
+        <dd class="col-sm-10">@Model.CreatedBy</dd>
+
+        <dt class="col-sm-2">Created On</dt>
+        <dd class="col-sm-10">@Model.CreatedOn</dd>
+
+        @if (Model.ModifiedBy != null)
+            {
+            <dt class="col-sm-2">Modified By</dt>
+            <dd class="col-sm-10">@Model.ModifiedBy</dd>
+
+            <dt class="col-sm-2">Modified On</dt>
+            <dd class="col-sm-10">@Model.ModifiedOn</dd>
+            }
+
+        <dt class="col-sm-2">Unit</dt>
+        <dd class="col-sm-10">@Model.MeasuringUnit</dd>
+
+        <dt class="col-sm-2">Note</dt>
+        <dd class="col-sm-10">@Model.Note</dd>
+    </dl>
+
+
+
+
+
+    <div class="mt-3">
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning me-2">Edit</a>
+
+        @if (Model.IsDeleted)
+            {
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-success">Undelete</button>
+            </form>
+            }
+        else
+            {
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="d-inline">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+            }
+
+        <a asp-action="Index" class="btn btn-secondary ms-2">Back to List</a>
+    </div>
+</div>

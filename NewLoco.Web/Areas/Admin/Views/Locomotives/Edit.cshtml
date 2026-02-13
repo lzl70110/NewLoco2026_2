@@ -1,0 +1,61 @@
+﻿@model NewLoco.Web.ViewModels.Locomotives.LocomotiveFormModel
+@using NewLoco.GCommon.Enums
+
+@{
+    ViewData["Title"] = "Edit Locomotive";
+    var currentFilter = (ViewData["CurrentFilter"] as string) ?? "active";
+    var id = (int?)ViewData["EntityId"] ?? 0;
+    }
+
+<h2 class="mb-3">Edit Locomotive</h2>
+
+<form asp-area="Admin"
+      asp-controller="Locomotives"
+      asp-action="Edit"
+      asp-route-id="@id"
+      asp-route-filter="@currentFilter"
+      method="post" class="needs-validation" novalidate>
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+    <div class="mb-3">
+        <label asp-for="Number" class="form-label"></label>
+        <input asp-for="Number" class="form-control" />
+        <span asp-validation-for="Number" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="LocomotiveType" class="form-label"></label>
+        <select asp-for="LocomotiveType" class="form-select"
+                asp-items="Html.GetEnumSelectList<LocomotiveType>()">
+        </select>
+        <span asp-validation-for="LocomotiveType" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="MeasuringUnit" class="form-label"></label>
+        <select asp-for="MeasuringUnit" class="form-select"
+                asp-items="Html.GetEnumSelectList<MeasuringUnits>()">
+        </select>
+        <span asp-validation-for="MeasuringUnit" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Note" class="form-label"></label>
+        <textarea asp-for="Note" class="form-control" rows="3"></textarea>
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+
+    <a asp-area="Admin"
+       asp-controller="Locomotives"
+       asp-action="Index"
+       asp-route-filter="@currentFilter"
+       class="btn btn-secondary ms-2">Cancel</a>
+</form>
+
+    @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    }

@@ -10,29 +10,29 @@ namespace NewLoco.Data.Configurations
         {
         public void Configure(EntityTypeBuilder<Locomotive> builder)
             {
-          
+
             builder.ToTable("Locomotives");
 
-          
+
             builder.HasKey(l => l.Id);
 
-  
+
             builder.Property(l => l.Number)
                 .IsRequired()
                 .HasMaxLength(LocomotiveNumberLength);
 
- 
+
             builder.HasIndex(l => l.Number).IsUnique();
-             
+
             builder.Property(l => l.LocomotiveType)
                 .HasConversion<int>()
                 .IsRequired();
 
-            
+
             builder.Property(l => l.MeasuringUnit)
-                .HasConversion<int>()  
+                .HasConversion<int>()
                 .IsRequired();
- 
+
             builder.HasMany(l => l.ShiftWorks)
                 .WithOne(s => s.Locomotive)
                 .HasForeignKey(s => s.LocoId)
@@ -42,6 +42,38 @@ namespace NewLoco.Data.Configurations
                 .WithOne(f => f.Locomotive)
                 .HasForeignKey(f => f.LocoId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasData(
+    new Locomotive
+        {
+        Id = 1,
+        Number = "52-101",
+        LocomotiveType = GCommon.Enums.LocomotiveType.Shunter,
+        MeasuringUnit = GCommon.Enums.MeasuringUnits.Mh,
+        CreatedOn = DateTime.UtcNow,
+        CreatedBy = "Seeder"
+        },
+    new Locomotive
+        {
+        Id = 2,
+        Number = "55-203",
+        LocomotiveType = GCommon.Enums.LocomotiveType.Shunter,
+        MeasuringUnit = GCommon.Enums.MeasuringUnits.Km,        
+        CreatedOn = DateTime.UtcNow,
+        CreatedBy = "Seeder"
+        },
+    new Locomotive
+        {
+        Id = 3,
+        Number = "06-029",
+        LocomotiveType = GCommon.Enums.LocomotiveType.Mainline,
+        MeasuringUnit = GCommon.Enums.MeasuringUnits.Km,       
+        CreatedOn = DateTime.UtcNow,
+        CreatedBy = "Seeder"
+        }
+);
+
             }
+
         }
     }

@@ -1,0 +1,10 @@
+﻿@model List<NewLoco.Web.ViewModels.Locomotives.LocomotiveNumberViewModel>
+
+<h2>Locomotive Numbers</h2>
+
+<ul class="list-group">
+    @foreach (var loco in Model)
+        {
+        <li class="list-group-item">@loco.Number</li>
+        }
+</ul>

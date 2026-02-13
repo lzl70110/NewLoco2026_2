@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NewLoco.Data.Models\NewLoco.Data.Models.csproj" />
+    <Folder Include="Contracts\" />
   </ItemGroup>
 
 </Project>

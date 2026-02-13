@@ -3,5 +3,6 @@
 public enum MeasuringUnits
 {
     Mh = 1,
-    Km = 2
-}
+    Km = 2,
+ 
+    }

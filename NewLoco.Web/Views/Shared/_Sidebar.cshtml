@@ -1,0 +1,55 @@
+﻿@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
+    }
+
+
+
+
+@* Sidebar partial *@
+<div class="col-3 bg-light vh-100 p-3">
+    <a asp-controller="Home"
+       asp-action="Index"
+       class="sidebar-link @(currentController == "Home" ? "active-link" : "")">
+        Home
+    </a>
+
+    <a asp-controller="Fuels"
+       asp-action="FuelReport"
+       class="sidebar-link @(currentController == "Fuels" ? "active-link" : "")">
+        Fuel
+    </a>
+
+    <a asp-area="Admin"
+       asp-controller="Locomotives"
+       asp-action="Index"
+       class="sidebar-link @(currentArea == "Admin" && currentController == "Locomotives" ? "active-link" : "")">
+        Locomotives
+    </a>
+
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link d-flex justify-content-between align-items-center"
+               data-bs-toggle="collapse" href="#fuelSubmenu" role="button" aria-expanded="false" aria-controls="fuelSubmenu">
+                Fuel
+                <span class="bi bi-caret-down-fill"></span>
+            </a>
+            <div class="collapse" id="fuelSubmenu">
+                <ul class="nav flex-column ms-3">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Fuels/Index">All Fuels</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Fuels/Create">New Input</a>
+                    </li>
+                </ul>
+            </div>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/Fuels/FuelReport">Fuel Report</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="/Admin">Admin</a>
+        </li>
+    </ul>
+</div>

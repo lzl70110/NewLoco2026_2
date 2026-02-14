@@ -1,0 +1,74 @@
+﻿@model NewLoco.Web.ViewModels.Fuels.FuelAllViewModel
+@{
+    ViewData["Title"] = "Edit Fuel Record";
+    }
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Edit" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label class="form-label">Locomotive</label>
+        <input class="form-control" value="@Model.LocomotiveNumber" readonly />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Date" class="form-label"></label>
+        <input asp-for="Date" class="form-control" type="date" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InitialFuel" class="form-label"></label>
+        <input asp-for="InitialFuel" class="form-control" step="0.01" id="InitialFuel" />
+        <span asp-validation-for="InitialFuel" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FinalFuel" class="form-label"></label>
+        <input asp-for="FinalFuel" class="form-control" step="0.01" id="FinalFuel" />
+        <span asp-validation-for="FinalFuel" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Refueled" class="form-label"></label>
+        <input asp-for="Refueled" class="form-control" step="0.01" id="Refueled" />
+        <span asp-validation-for="Refueled" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Consumption" class="form-label"></label>
+        <input asp-for="Consumption" class="form-control" readonly id="Consumption" />
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Note" class="form-label"></label>
+        <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="FuelReport" class="btn btn-secondary">Cancel</a>
+</form>
+
+    @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        function updateConsumption() {
+            var initial = parseFloat($('#InitialFuel').val()) || 0;
+            var final = parseFloat($('#FinalFuel').val()) || 0;
+            var refueled = parseFloat($('#Refueled').val()) || 0;
+            $('#Consumption').val((initial + refueled - final).toFixed(2));
+        }
+
+        $(document).ready(function () {
+            $('#InitialFuel, #FinalFuel, #Refueled').on('input', updateConsumption);
+            updateConsumption(); // set initial value
+        });
+    </script>
+    }

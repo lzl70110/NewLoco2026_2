@@ -1,0 +1,22 @@
+﻿=== ALL CONTROLLERS (full paths) ===
+
+FullName                                                                                                                
+--------                                                                                                                
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Areas\Admin\Controllers\LocomotivesController.cs
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Controllers\BaseController.cs                   
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Controllers\FuelsController.cs                  
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Controllers\HomeController.cs                   
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Controllers\LocomotiveController.cs             
+
+
+
+=== LOCOMOTIVE CONTROLLERS (full paths) ===
+
+FullName                                                                                                                
+--------                                                                                                                
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Areas\Admin\Controllers\LocomotivesController.cs
+C:\Users\Lyubomir\Documents\C#\ASP.NET\Projects\NewLoco.Web\NewLoco.Web\Controllers\LocomotiveController.cs             
+
+
+
+=== LOCOMOTIVE VIEWS (Admin + root) ===

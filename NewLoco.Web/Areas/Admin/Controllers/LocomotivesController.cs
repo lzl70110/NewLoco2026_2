@@ -1,73 +1,42 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NewLoco.Data;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.Locomotives;
-using NewLoco.GCommon.Enums;
+
 namespace NewLoco.Web.Areas.Admin.Controllers
     {
     [Area("Admin")]
+    [Authorize] // CHANGE: Require authentication for the entire controller (Admin area).
     public class LocomotivesController : Controller
         {
-        private readonly LocoDbContext _db;
+        private readonly ILocomotiveService service;
 
-        public LocomotivesController(LocoDbContext db) => _db = db;
+        public LocomotivesController(ILocomotiveService service)
+            {
+            service = service ?? throw new ArgumentNullException(nameof(service)); // CHANGE: basic guard
+            this.service = service;
+            }
 
-        // GET: Admin/Locomotives?filter=active|deleted|all
+        // INDEX (Admin-only)
         public async Task<IActionResult> Index(string filter = "active")
             {
-            var query = _db.Locomotives.AsQueryable();
-
-            query = filter switch
-                {
-                    "deleted" => query.Where(l => l.IsDeleted),
-                    "all" => query,
-                    _ => query.Where(l => !l.IsDeleted) // default: active
-                    };
-
-            // IMPORTANT: project to the concrete view model (NOT an anonymous type)
-            var model = await query
-                .OrderBy(l => l.Number)
-                .Select(l => new LocomotiveNumberViewModel
-                    {
-                    Id = l.Id,
-                    Number = l.Number,
-                    // If your VM uses enums, keep enum types here;
-                    // below we map to strings for a simple table output:
-                    LocomotiveType = l.LocomotiveType,
-                    MeasuringUnit = l.MeasuringUnit,
-                    IsDeleted = l.IsDeleted
-                    })
-                .ToListAsync();
-
+            // CHANGE: Admin full list with filter; anonymous users cannot access due to [Authorize].
+            var model = await service.GetAll(filter);
             ViewData["CurrentFilter"] = filter;
             return View(model);
             }
 
-        // GET: Admin/Locomotives/Details/5
+        // DETAILS (Admin-only)
         public async Task<IActionResult> Details(int id, string filter)
             {
-            var entity = await _db.Locomotives.FindAsync(id);
-            if (entity == null) return NotFound();
-
-            var vm = new LocomotiveDetailsViewModel
-                {
-                Id = entity.Id,
-                Number = entity.Number,
-                LocomotiveType = entity.LocomotiveType,
-                MeasuringUnit = entity.MeasuringUnit,
-                IsDeleted = entity.IsDeleted,
-                Note = entity.Note!,
-              CreatedOn= entity.CreatedOn,
-                CreatedBy= entity.CreatedBy,
-                ModifiedOn= entity.ModifiedOn,
-                ModifiedBy= entity.ModifiedBy
-                };
+            var vm = await service.GetDetails(id);
+            if (vm == null) return NotFound();
 
             ViewData["CurrentFilter"] = filter;
             return View(vm);
             }
 
-        // GET: Admin/Locomotives/Create
+        // CREATE GET (Admin-only)
         [HttpGet]
         public IActionResult Create(string filter)
             {
@@ -75,7 +44,7 @@ namespace NewLoco.Web.Areas.Admin.Controllers
             return View(new LocomotiveFormModel());
             }
 
-        // POST: Admin/Locomotives/Create
+        // CREATE POST (Admin-only)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LocomotiveFormModel model, string filter)
@@ -87,53 +56,29 @@ namespace NewLoco.Web.Areas.Admin.Controllers
                 }
 
             var user = User?.Identity?.Name ?? "system";
-            var entity = new Data.Models.Locomotive
-                {
-                Number = model.Number,
-                LocomotiveType = model.LocomotiveType,
-                MeasuringUnit = model.MeasuringUnit,
-                Note = model.Note,
-                IsDeleted = false,
-                CreatedOn = DateTime.UtcNow,
-                CreatedBy = user,
-                ModifiedOn = null,
-                ModifiedBy = null
-                };
-
-            _db.Locomotives.Add(entity);
-            await _db.SaveChangesAsync();
+            await service.CreateAsync(model, user);
 
             return RedirectToAction(nameof(Index), new { filter });
             }
 
-        // GET: Admin/Locomotives/Edit/5
+        // EDIT GET (Admin-only)
         [HttpGet]
         public async Task<IActionResult> Edit(int id, string filter)
             {
-            var entity = await _db.Locomotives.FindAsync(id);
-            if (entity == null) return NotFound();
-
-            var vm = new LocomotiveFormModel
-                {
-                Number = entity.Number,
-                LocomotiveType = entity.LocomotiveType,
-                MeasuringUnit = entity.MeasuringUnit,
-                Note = entity.Note
-                };
+            var vm = await service.GetForEdit(id);
+            if (vm == null) return NotFound();
 
             ViewData["CurrentFilter"] = filter;
             ViewData["EntityId"] = id;
+
             return View(vm);
             }
 
-        // POST: Admin/Locomotives/Edit/5
+        // EDIT POST (Admin-only)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, LocomotiveFormModel model, string filter)
             {
-            var entity = await _db.Locomotives.FindAsync(id);
-            if (entity == null) return NotFound();
-
             if (!ModelState.IsValid)
                 {
                 ViewData["CurrentFilter"] = filter;
@@ -141,46 +86,31 @@ namespace NewLoco.Web.Areas.Admin.Controllers
                 return View(model);
                 }
 
-            entity.Number = model.Number;
-            entity.LocomotiveType = model.LocomotiveType;
-            entity.MeasuringUnit = model.MeasuringUnit;
-            entity.Note = model.Note;
-            entity.ModifiedOn = DateTime.UtcNow;
-            entity.ModifiedBy = User?.Identity?.Name ?? "system";
+            var user = User?.Identity?.Name ?? "system";
+            await service.EditAsync(id, model, user);
 
-            await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { filter });
             }
 
-        // POST: Admin/Locomotives/Delete
+        // DELETE (Admin-only)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id, string filter)
             {
-            var entity = await _db.Locomotives.FindAsync(id);
-            if (entity == null) return NotFound();
+            var user = User?.Identity?.Name ?? "system";
+            await service.DeleteAsync(id, user);
 
-            entity.IsDeleted = true;
-            entity.ModifiedOn = DateTime.UtcNow;
-            entity.ModifiedBy = User?.Identity?.Name ?? "system";
-
-            await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { filter });
             }
 
-        // POST: Admin/Locomotives/Undelete
+        // UNDELETE (Admin-only)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Undelete(int id, string filter)
             {
-            var entity = await _db.Locomotives.FindAsync(id);
-            if (entity == null) return NotFound();
+            var user = User?.Identity?.Name ?? "system";
+            await service.UndeleteAsync(id, user);
 
-            entity.IsDeleted = false;
-            entity.ModifiedOn = DateTime.UtcNow;
-            entity.ModifiedBy = User?.Identity?.Name ?? "system";
-
-            await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index), new { filter });
             }
         }

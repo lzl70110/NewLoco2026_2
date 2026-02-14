@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using NewLoco.Data;
+using NewLoco.Service.Core;
+using NewLoco.Service.Core.Contracts;
+using NewLoco.Service.Core.Services;
 
-namespace NewLoco.Data
-
+namespace NewLoco.Web // препоръчително, вместо .Data
     {
     public class Program
         {
@@ -10,39 +13,58 @@ namespace NewLoco.Data
             {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-            var connectionString = builder.Configuration.GetConnectionString("DevConnection") ?? throw new InvalidOperationException("Connection string 'DevConnection' not found.");
+            // DbContext
+            var connectionString = builder.Configuration.GetConnectionString("DevConnection")
+                ?? throw new InvalidOperationException("Connection string 'DevConnection' not found.");
+
             builder.Services.AddDbContext<LocoDbContext>(options =>
                 options.UseSqlServer(connectionString));
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            builder.Services.AddDefaultIdentity<IdentityUser>(options =>
-            {
-                options.SignIn.RequireConfirmedAccount = false;
-                options.SignIn.RequireConfirmedEmail = false;
-                options.SignIn.RequireConfirmedPhoneNumber = false;
+            // MVC
+            builder.Services.AddControllersWithViews();
 
-                options.Password.RequireDigit = false;
-                options.Password.RequireLowercase = false;
-                options.Password.RequireNonAlphanumeric = false;
-                options.Password.RequireUppercase = false;
-                options.Password.RequiredLength = 4;
-                options.Password.RequiredUniqueChars = 0;
+            // Identity (всички логнати = "админ" за сега)
+            builder.Services
+                .AddDefaultIdentity<IdentityUser>(options =>
+                {
+                    options.SignIn.RequireConfirmedAccount = false;
+                    options.SignIn.RequireConfirmedEmail = false;
+                    options.SignIn.RequireConfirmedPhoneNumber = false;
 
-                options.User.RequireUniqueEmail = true;
+                    options.Password.RequireDigit = false;
+                    options.Password.RequireLowercase = false;
+                    options.Password.RequireNonAlphanumeric = false;
+                    options.Password.RequireUppercase = false;
+                    options.Password.RequiredLength = 4;
+                    options.Password.RequiredUniqueChars = 0;
 
-                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
-                options.Lockout.MaxFailedAccessAttempts = 255;
-            }
-            )
+                    options.User.RequireUniqueEmail = true;
+
+                    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
+                    options.Lockout.MaxFailedAccessAttempts = 255;
+                })
                 .AddEntityFrameworkStores<LocoDbContext>();
 
+            // (Опционално) фиксиране на пътищата на cookie-то
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.LoginPath = "/Identity/Account/Login";
+                options.LogoutPath = "/Identity/Account/Logout";
+                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+            });
 
-            builder.Services.AddControllersWithViews();
+            // Authorization – без роли/политики засега
+            builder.Services.AddAuthorization();
+
+            // DI за нашите услуги
+            builder.Services.AddScoped<IFuelService, FuelService>();
+            builder.Services.AddScoped<ILocomotiveService, LocomotiveService>();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            // Pipeline
             if (app.Environment.IsDevelopment())
                 {
                 app.UseMigrationsEndPoint();
@@ -50,7 +72,6 @@ namespace NewLoco.Data
             else
                 {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
                 }
 
@@ -58,15 +79,19 @@ namespace NewLoco.Data
             app.UseStaticFiles();
 
             app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Routes
             app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
+                name: "areas",
+                pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
             app.MapRazorPages();
 
             app.Run();

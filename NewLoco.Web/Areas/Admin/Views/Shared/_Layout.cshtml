@@ -1,29 +1,125 @@
-﻿@{
-    Layout = null;
+﻿@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
     var title = ViewData["Title"] as string ?? "NewLoco";
+    var userName = User.Identity?.IsAuthenticated == true
+        ? (User.Identity?.Name ?? "User")
+        : "Guest";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentArea = ViewContext.RouteData.Values["area"]?.ToString();
     }
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@title - NewLoco</title>
+    <title>@title</title>
 
-    <!-- Bootstrap CSS (CDN) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous">
+    <!-- Vendor CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <!-- App CSS -->
+    <link href="~/css/site-layout.css" rel="stylesheet" asp-append-version="true" />
 </head>
+
 <body>
-    <div class="container py-3">
-        @RenderBody()
+    <!-- Top navbar -->
+    <header class="navbar navbar-dark bg-dark px-3">
+        <!-- Brand goes to Home/Index -->
+        <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Index</a>
+
+        <div class="ms-auto d-flex align-items-center">
+            <span class="text-white me-3">@userName</span>
+
+            @if (SignInManager.IsSignedIn(User))
+                {
+                <!-- Logout must be POST to Identity Razor Page -->
+                <form method="post"
+                      asp-area="Identity"
+                      asp-page="/Account/Logout"
+                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                      class="m-0">
+                    <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+                </form>
+                }
+            else
+                {
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-sm btn-outline-light">Login</a>
+                }
+        </div>
+    </header>
+
+    <div class="app-layout d-flex" style="height: calc(100vh - 56px);">
+        <!-- Sidebar (20%) -->
+        <nav class="ultra-sidebar bg-dark p-3" style="width:20%;">
+            <!-- Locomotives -->
+            <a asp-area="Admin"
+               asp-controller="Locomotives"
+               asp-action="Index"
+               class="btn btn-outline-light w-100 text-start mb-2 @(currentArea == "Admin" && currentController == "Locomotives" ? "active" : "")">
+                <i class="fas fa-train"></i> Locomotives
+            </a>
+
+            <!-- Reports -->
+            <a asp-area="Admin"
+               asp-controller="Reports"
+               asp-action="Index"
+               class="btn btn-outline-light w-100 text-start mb-2 @(currentArea == "Admin" && currentController == "Reports" ? "active" : "")">
+                <i class="fas fa-chart-line"></i> Reports
+            </a>
+
+            <!-- Fuel (visible only when signed in) -->
+            @if (SignInManager.IsSignedIn(User))
+                {
+                <!-- Fuel toggle (button) -->
+                <button class="btn btn-outline-warning w-100 text-start mb-2"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#fuelSubmenu"
+                        aria-expanded="false"
+                        aria-controls="fuelSubmenu">
+                    <i class="bi bi-fuel-pump"></i> Fuel
+                    <i class="bi bi-caret-down-fill float-end"></i>
+                </button>
+
+                <!-- Fuel submenu -->
+                <div class="collapse ms-2" id="fuelSubmenu">
+                    <a asp-area=""
+                       asp-controller="Fuels"
+                       asp-action="Index"
+                       class="btn btn-outline-light w-100 text-start mb-2 @(currentController == "Fuels" ? "active" : "")">
+                        <i class="bi bi-list-ul"></i> All Fuels
+                    </a>
+
+                    <a asp-area=""
+                       asp-controller="Fuels"
+                       asp-action="Create"
+                       class="btn btn-outline-light w-100 text-start mb-2">
+                        <i class="bi bi-plus-circle"></i> New Input
+                    </a>
+
+                    <a asp-area=""
+                       asp-controller="Fuels"
+                       asp-action="FuelReport"
+                       class="btn btn-outline-light w-100 text-start mb-2">
+                        <i class="bi bi-graph-up-arrow"></i> Fuel Report
+                    </a>
+                </div>
+                }
+        </nav>
+
+        <!-- Main content (80%) -->
+        <main class="main-content flex-grow-1 p-3" style="overflow:auto;">
+            @RenderBody()
+        </main>
     </div>
 
-    <!-- Bootstrap JS Bundle   -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-            crossorigin="anonymous"></script>
+    <!-- Vendor JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     @RenderSection("Scripts", required: false)
 </body>

@@ -1,0 +1,55 @@
+﻿@model List<NewLoco.Web.ViewModels.Fuels.FuelAllViewModel>
+@using NewLoco.Web.ViewModels.Fuels;
+
+@{
+    ViewData["Title"] = "Fuel Records";
+    }
+
+<h2 class="mb-3">Fuel Records</h2>
+
+@if (!Model.Any())
+    {
+    <div class="alert alert-info">
+        No fuel records found.
+    </div>
+    }
+else
+    {
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Locomotive</th>
+                <th>Date</th>
+                <th>Initial Fuel</th>
+                <th>Final Fuel</th>
+                <th>Consumption</th>
+                <th>Refueled</th>
+                <th>Created On</th>
+                <th>Created By</th>
+                <th>Edited By</th>
+                <th>Edited On</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var fuel in Model.Select((value, index) => new { value, index }))
+                {
+                <tr>
+                    <td>@(fuel.index + 1)</td>
+                    <td>@fuel.value.LocomotiveNumber</td>
+                    <td>@fuel.value.Date.ToString("dd.MM.yyyy")</td>
+                    <td>@fuel.value.InitialFuel</td>
+                    <td>@fuel.value.FinalFuel</td>
+                    <td>@fuel.value.Consumption</td>
+                    <td>@fuel.value.Refueled</td>
+                    <td>@fuel.value.CreatedOn.ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@fuel.value.</td>
+                    <td>@(fuel.value.EditedBy ?? "-")</td>
+                    <td>@(fuel.value.EditedOn?.ToString("dd.MM.yyyy HH:mm") ?? "-")</td>
+                    <td>@(string.IsNullOrWhiteSpace(fuel.value.Note) ? "-" : fuel.value.Note)</td>
+                </tr>
+                }
+        </tbody>
+    </table>
+    }

@@ -1,0 +1,66 @@
+﻿@model NewLoco.Web.ViewModels.Fuels.CreateFuelViewModel
+@{
+    ViewData["Title"] = "Add New Fuel Record";
+    }
+
+<h2>@ViewData["Title"]</h2>
+
+<form asp-action="Create" method="post">
+    @Html.AntiForgeryToken()
+
+    <div class="mb-3">
+        <label asp-for="LocomotiveId" class="form-label"></label>
+        <select asp-for="LocomotiveId" class="form-select" asp-items="ViewBag.Locomotives" onchange="setInitialFuel(this.value)">
+            <option value="">-- Select Locomotive --</option>
+        </select>
+        <span asp-validation-for="LocomotiveId" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Date" class="form-label"></label>
+        <input asp-for="Date" class="form-control" type="date" />
+        <span asp-validation-for="Date" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="InitialFuel" class="form-label"></label>
+        <input asp-for="InitialFuel" class="form-control" step="0.01" />
+        <span asp-validation-for="InitialFuel" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="FinalFuel" class="form-label"></label>
+        <input asp-for="FinalFuel" class="form-control" step="0.01" />
+        <span asp-validation-for="FinalFuel" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Refueled" class="form-label"></label>
+        <input asp-for="Refueled" class="form-control" step="0.01" />
+        <span asp-validation-for="Refueled" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Note" class="form-label"></label>
+        <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+        <span asp-validation-for="Note" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
+
+    @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        function setInitialFuel(locomotiveId) {
+            if (!locomotiveId) return;
+            $.getJSON('@Url.Action("GetLastFuel")', { locomotiveId: locomotiveId }, function (data) {
+                $('input[name="InitialFuel"]').val(data);
+            });
+        }
+    </script>
+    }

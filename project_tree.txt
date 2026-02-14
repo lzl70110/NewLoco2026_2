@@ -23,12 +23,24 @@
     |-- 20260212230557_SeedSampleLocomotivesAndData.cs
     |-- 20260212230557_SeedSampleLocomotivesAndData.Designer.cs
     |-- LocoDbContextModelSnapshot.cs
+|-- NewLoco.Service.Core
+  |-- Contracts
+    |-- IFuelService.cs
+    |-- ILocomotiveService.cs
+  |-- FuelService.cs
+  |-- LocomotiveService.cs
 |-- NewLoco.Web
 |-- NewLoco.Web.ViewModels
   |-- ErrorViewModel.cs
+  |-- Fuels
+    |-- CreateFuelViewModel.cs
+    |-- FuelAllViewModel.cs
+    |-- FuelsFullDetailsViewModel.cs
   |-- Locomotives
     |-- CreateLocomotiveViewModel.cs
     |-- EditLocomotiveViewModel.cs
+    |-- Interfaces
+      |-- ILocomotiveViewModel.cs
     |-- LocomotiveDetailsViewModel.cs
     |-- LocomotiveFormModel.cs
     |-- LocomotiveNumberViewModel.cs
@@ -39,8 +51,12 @@
       |-- Controllers
         |-- LocomotivesController.cs
       |-- Views
+        |-- _ViewImports.cshtml
         |-- _ViewStart.cshtml
         |-- Locomotives
+          |-- Create.cshtml
+          |-- Details.cshtml
+          |-- Edit.cshtml
           |-- Index.cshtml
         |-- Shared
           |-- _Layout.cshtml
@@ -58,6 +74,8 @@
           |-- Register.cshtml
           |-- Register.cshtml.cs
   |-- Controllers
+    |-- BaseController.cs
+    |-- FuelsController.cs
     |-- HomeController.cs
     |-- LocomotiveController.cs
   |-- Program.cs
@@ -68,6 +86,13 @@
   |-- Views
     |-- _ViewImports.cshtml
     |-- _ViewStart.cshtml
+    |-- Fuels
+      |-- Create.cshtml
+      |-- Delete.cshtml
+      |-- Details.cshtml
+      |-- Edit.cshtml
+      |-- FuelReport.cshtml
+      |-- Index.cshtml
     |-- Home
       |-- Index.cshtml
       |-- Privacy.cshtml
@@ -77,6 +102,7 @@
     |-- Shared
       |-- _Layout.cshtml
       |-- _LoginPartial.cshtml
+      |-- _Sidebar.cshtml
       |-- _ValidationScriptsPartial.cshtml
       |-- Error.cshtml
   |-- wwwroot

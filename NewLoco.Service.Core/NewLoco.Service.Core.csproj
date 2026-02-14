@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Contracts\" />
+    <ProjectReference Include="..\GCommon\GCommon.csproj" />
+    <ProjectReference Include="..\NewLoco.Data.Models\NewLoco.Data.Models.csproj" />
+    <ProjectReference Include="..\NewLoco.Data\NewLoco.Data.csproj" />
+    <ProjectReference Include="..\NewLoco.Web.ViewModels\NewLoco.Web.ViewModels.csproj" />
   </ItemGroup>
 
 </Project>

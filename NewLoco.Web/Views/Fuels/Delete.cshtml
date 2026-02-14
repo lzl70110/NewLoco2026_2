@@ -1,0 +1,26 @@
+﻿@model NewLoco.Web.ViewModels.Fuels.FuelAllViewModel
+
+@{
+    ViewData["Title"] = "Delete Fuel Record";
+    }
+
+<h2>Delete Fuel Record - @Model.LocomotiveNumber (@Model.Date.ToString("dd.MM.yyyy"))</h2>
+
+<div class="alert alert-warning">
+    Are you sure you want to delete this fuel record?
+</div>
+
+<table class="table table-bordered">
+    <tr><th>Initial Fuel</th><td>@Model.InitialFuel</td></tr>
+    <tr><th>Final Fuel</th><td>@Model.FinalFuel</td></tr>
+    <tr><th>Consumption</th><td>@Model.Consumption</td></tr>
+    <tr><th>Refueled</th><td>@Model.Refueled</td></tr>
+    <tr><th>Note</th><td>@Model.Note</td></tr>
+</table>
+
+<form asp-action="DeleteConfirmed" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="FuelReport" class="btn btn-secondary">Cancel</a>
+</form>

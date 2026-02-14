@@ -6,7 +6,8 @@ namespace NewLoco.Data.Models;
 
 public class ShiftWork : BaseEntity
     {
-    [Key] public int Id { get; set; }
+    [Key] 
+    public int Id { get; set; }
 
     [Required]
     [ForeignKey(nameof(Locomotive))]
@@ -16,7 +17,7 @@ public class ShiftWork : BaseEntity
     public Locomotive Locomotive { get; set; } = null!;
 
 
-    public DateOnly Date { get; set; }
+    public DateTime Date { get; set; }
 
     public Shift Shift { get; set; } = Shift.Day;
 

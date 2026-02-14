@@ -24,4 +24,8 @@
     <ProjectReference Include="..\NewLoco.Web.ViewModels\NewLoco.Web.ViewModels.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\ShiftWorks\" />
+  </ItemGroup>
+
 </Project>

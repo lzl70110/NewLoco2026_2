@@ -22,6 +22,6 @@ namespace NewLoco.Data.Models
         public bool IsDeleted { get; set; }
 
         [StringLength(NoteMaxLength)]
-        public string? Note { get; set; }
+        public string? Note { get; set; } = "";
         }
     }

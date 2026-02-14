@@ -241,10 +241,10 @@ namespace NewLoco.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("CreatedOn")
+                    b.Property<DateTime>("CreatedOn")
                         .HasColumnType("date");
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
                     b.Property<decimal>("FinalFuel")
@@ -259,7 +259,7 @@ namespace NewLoco.Data.Migrations
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly?>("ModifiedOn")
+                    b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("date");
 
                     b.Property<string>("Note")
@@ -339,13 +339,13 @@ namespace NewLoco.Data.Migrations
                     b.Property<string>("CreatedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("CreatedOn")
+                    b.Property<DateTime>("CreatedOn")
                         .HasColumnType("date");
 
                     b.Property<string>("CreatedOnBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
                     b.Property<decimal>("FinalValue")
@@ -360,7 +360,7 @@ namespace NewLoco.Data.Migrations
                     b.Property<string>("ModifiedBy")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly?>("ModifiedOn")
+                    b.Property<DateTime?>("ModifiedOn")
                         .HasColumnType("date");
 
                     b.Property<string>("Note")

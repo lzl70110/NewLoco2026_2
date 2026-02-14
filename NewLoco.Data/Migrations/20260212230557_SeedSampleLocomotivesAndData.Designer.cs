@@ -246,7 +246,7 @@ namespace NewLoco.Data.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
                     b.Property<decimal>("FinalFuel")
@@ -288,7 +288,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 100m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3913),
-                            Date = new DateOnly(2026, 1, 12),
+                            Date = new DateTime(2026, 1, 12),
                             FinalFuel = 400m,
                             InitialFuel = 500m,
                             IsDeleted = false,
@@ -301,7 +301,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 100m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3920),
-                            Date = new DateOnly(2026, 1, 13),
+                            Date = new DateTime(2026, 1, 13),
                             FinalFuel = 300m,
                             InitialFuel = 400m,
                             IsDeleted = false,
@@ -314,7 +314,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 100m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3923),
-                            Date = new DateOnly(2026, 1, 14),
+                            Date = new DateTime(2026, 1, 14),
                             FinalFuel = 200m,
                             InitialFuel = 300m,
                             IsDeleted = false,
@@ -327,7 +327,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 25m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3927),
-                            Date = new DateOnly(2026, 1, 12),
+                            Date = new DateTime(2026, 1, 12),
                             FinalFuel = 975m,
                             InitialFuel = 1000m,
                             IsDeleted = false,
@@ -340,7 +340,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 25m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3930),
-                            Date = new DateOnly(2026, 1, 13),
+                            Date = new DateTime(2026, 1, 13),
                             FinalFuel = 950m,
                             InitialFuel = 975m,
                             IsDeleted = false,
@@ -353,7 +353,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 25m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3933),
-                            Date = new DateOnly(2026, 1, 14),
+                            Date = new DateTime(2026, 1, 14),
                             FinalFuel = 925m,
                             InitialFuel = 950m,
                             IsDeleted = false,
@@ -366,7 +366,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 30m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3937),
-                            Date = new DateOnly(2026, 1, 12),
+                            Date = new DateTime(2026, 1, 12),
                             FinalFuel = 1470m,
                             InitialFuel = 1500m,
                             IsDeleted = false,
@@ -379,7 +379,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 30m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3940),
-                            Date = new DateOnly(2026, 1, 13),
+                            Date = new DateTime(2026, 1, 13),
                             FinalFuel = 1440m,
                             InitialFuel = 1470m,
                             IsDeleted = false,
@@ -392,7 +392,7 @@ namespace NewLoco.Data.Migrations
                             Consumption = 30m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 506, DateTimeKind.Utc).AddTicks(3943),
-                            Date = new DateOnly(2026, 1, 14),
+                            Date = new DateTime(2026, 1, 14),
                             FinalFuel = 1410m,
                             InitialFuel = 1440m,
                             IsDeleted = false,
@@ -502,7 +502,7 @@ namespace NewLoco.Data.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("Date")
+                    b.Property<DateTime>("Date")
                         .HasColumnType("date");
 
                     b.Property<decimal>("FinalValue")
@@ -544,7 +544,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 5m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3723),
-                            Date = new DateOnly(2026, 1, 12),
+                            Date = new DateTime(2026, 1, 12),
                             FinalValue = 105m,
                             InitialValue = 100m,
                             IsDeleted = false,
@@ -557,7 +557,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 5m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3729),
-                            Date = new DateOnly(2026, 1, 13),
+                            Date = new DateTime(2026, 1, 13),
                             FinalValue = 110m,
                             InitialValue = 105m,
                             IsDeleted = false,
@@ -570,7 +570,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 5m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3732),
-                            Date = new DateOnly(2026, 1, 14),
+                            Date = new DateTime(2026, 1, 14),
                             FinalValue = 115m,
                             InitialValue = 110m,
                             IsDeleted = false,
@@ -583,7 +583,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 50m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3735),
-                            Date = new DateOnly(2026, 1, 12),
+                            Date = new DateTime(2026, 1, 12),
                             FinalValue = 5050m,
                             InitialValue = 5000m,
                             IsDeleted = false,
@@ -596,7 +596,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 50m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3738),
-                            Date = new DateOnly(2026, 1, 13),
+                            Date = new DateTime(2026, 1, 13),
                             FinalValue = 5100m,
                             InitialValue = 5050m,
                             IsDeleted = false,
@@ -609,7 +609,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 50m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3742),
-                            Date = new DateOnly(2026, 1, 14),
+                            Date = new DateTime(2026, 1, 14),
                             FinalValue = 5150m,
                             InitialValue = 5100m,
                             IsDeleted = false,
@@ -622,7 +622,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 50m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3745),
-                            Date = new DateOnly(2026, 1, 12),
+                            Date = new DateTime(2026, 1, 12),
                             FinalValue = 10050m,
                             InitialValue = 10000m,
                             IsDeleted = false,
@@ -635,7 +635,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 50m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3748),
-                            Date = new DateOnly(2026, 1, 13),
+                            Date = new DateTime(2026, 1, 13),
                             FinalValue = 10100m,
                             InitialValue = 10050m,
                             IsDeleted = false,
@@ -648,7 +648,7 @@ namespace NewLoco.Data.Migrations
                             Amount = 50m,
                             CreatedBy = "Seeder",
                             CreatedOn = new DateTime(2026, 2, 12, 23, 5, 56, 507, DateTimeKind.Utc).AddTicks(3751),
-                            Date = new DateOnly(2026, 1, 14),
+                            Date = new DateTime(2026, 1, 14),
                             FinalValue = 10150m,
                             InitialValue = 10100m,
                             IsDeleted = false,

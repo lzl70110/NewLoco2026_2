@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.3.9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\GCommon\GCommon.csproj" />
     <ProjectReference Include="..\NewLoco.Data.Models\NewLoco.Data.Models.csproj" />
     <ProjectReference Include="..\NewLoco.Data\NewLoco.Data.csproj" />

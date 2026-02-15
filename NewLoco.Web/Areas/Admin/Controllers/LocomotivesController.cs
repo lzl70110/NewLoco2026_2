@@ -6,48 +6,48 @@ using NewLoco.Web.ViewModels.Locomotives;
 namespace NewLoco.Web.Areas.Admin.Controllers
     {
     [Area("Admin")]
-    [Authorize] // CHANGE: Require authentication for the entire controller (Admin area).
+    [Authorize] // Require authentication for Admin area
     public class LocomotivesController : Controller
         {
         private readonly ILocomotiveService service;
 
         public LocomotivesController(ILocomotiveService service)
             {
-            service = service ?? throw new ArgumentNullException(nameof(service)); // CHANGE: basic guard
-            this.service = service;
+            // Null-guard + assign to field
+            this.service = service ?? throw new ArgumentNullException(nameof(service));
             }
 
-        // INDEX (Admin-only)
-        public async Task<IActionResult> Index(string filter = "active")
+        // GET: /Admin/Locomotives?filter=active|all|deleted
+        public async Task<IActionResult> Index(string? filter = "active")
             {
-            // CHANGE: Admin full list with filter; anonymous users cannot access due to [Authorize].
-            var model = await service.GetAll(filter);
+            var dtos = await service.GetAllAsync(filter);
+            var model = dtos.Select(ToVm).ToList(); // DTO -> VM
             ViewData["CurrentFilter"] = filter;
             return View(model);
             }
 
-        // DETAILS (Admin-only)
-        public async Task<IActionResult> Details(int id, string filter)
+        // GET: /Admin/Locomotives/Details/5
+        public async Task<IActionResult> Details(int id, string? filter)
             {
-            var vm = await service.GetDetails(id);
-            if (vm == null) return NotFound();
+            var dto = await service.GetDetailsAsync(id);
+            if (dto == null) return NotFound();
 
             ViewData["CurrentFilter"] = filter;
-            return View(vm);
+            return View(ToVm(dto)); // DTO -> VM
             }
 
-        // CREATE GET (Admin-only)
+        // GET: /Admin/Locomotives/Create
         [HttpGet]
-        public IActionResult Create(string filter)
+        public IActionResult Create(string? filter)
             {
             ViewData["CurrentFilter"] = filter;
             return View(new LocomotiveFormModel());
             }
 
-        // CREATE POST (Admin-only)
+        // POST: /Admin/Locomotives/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(LocomotiveFormModel model, string filter)
+        public async Task<IActionResult> Create(LocomotiveFormModel model, string? filter)
             {
             if (!ModelState.IsValid)
                 {
@@ -56,28 +56,28 @@ namespace NewLoco.Web.Areas.Admin.Controllers
                 }
 
             var user = User?.Identity?.Name ?? "system";
-            await service.CreateAsync(model, user);
+            await service.CreateAsync(ToDto(model), user); // VM -> DTO
 
             return RedirectToAction(nameof(Index), new { filter });
             }
 
-        // EDIT GET (Admin-only)
+        // GET: /Admin/Locomotives/Edit/5
         [HttpGet]
-        public async Task<IActionResult> Edit(int id, string filter)
+        public async Task<IActionResult> Edit(int id, string? filter)
             {
-            var vm = await service.GetForEdit(id);
-            if (vm == null) return NotFound();
+            var dto = await service.GetForEditAsync(id);
+            if (dto == null) return NotFound();
 
             ViewData["CurrentFilter"] = filter;
             ViewData["EntityId"] = id;
 
-            return View(vm);
+            return View(ToVm(dto)); // DTO -> VM
             }
 
-        // EDIT POST (Admin-only)
+        // POST: /Admin/Locomotives/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, LocomotiveFormModel model, string filter)
+        public async Task<IActionResult> Edit(int id, LocomotiveFormModel model, string? filter)
             {
             if (!ModelState.IsValid)
                 {
@@ -87,15 +87,15 @@ namespace NewLoco.Web.Areas.Admin.Controllers
                 }
 
             var user = User?.Identity?.Name ?? "system";
-            await service.EditAsync(id, model, user);
+            await service.EditAsync(id, ToDto(model), user); // VM -> DTO
 
             return RedirectToAction(nameof(Index), new { filter });
             }
 
-        // DELETE (Admin-only)
+        // POST: /Admin/Locomotives/Delete/5  (soft-delete)
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id, string filter)
+        public async Task<IActionResult> Delete(int id, string? filter)
             {
             var user = User?.Identity?.Name ?? "system";
             await service.DeleteAsync(id, user);
@@ -103,15 +103,65 @@ namespace NewLoco.Web.Areas.Admin.Controllers
             return RedirectToAction(nameof(Index), new { filter });
             }
 
-        // UNDELETE (Admin-only)
+        // POST: /Admin/Locomotives/Undelete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Undelete(int id, string filter)
+        public async Task<IActionResult> Undelete(int id, string? filter)
             {
             var user = User?.Identity?.Name ?? "system";
             await service.UndeleteAsync(id, user);
 
             return RedirectToAction(nameof(Index), new { filter });
             }
+
+        // -----------------
+        // Mapping helpers:
+        // -----------------
+
+        // DTO -> VM (list row)
+        private static LocomotiveNumberViewModel ToVm(LocoNumberDto dto)
+            => new LocomotiveNumberViewModel
+                {
+                Id = dto.Id,
+                Number = dto.Number,
+                LocomotiveType = dto.LocomotiveType,   // enum -> enum (see note below if your VM uses string)
+                MeasuringUnit = dto.MeasuringUnit,    // enum -> enum
+                IsDeleted = dto.IsDeleted
+                };
+
+        // DTO -> VM (details)
+        private static LocomotiveDetailsViewModel ToVm(LocoDetailsDto dto)
+            => new LocomotiveDetailsViewModel
+                {
+                Id = dto.Id,
+                Number = dto.Number,
+                LocomotiveType = dto.LocomotiveType,   // enum -> enum
+                MeasuringUnit = dto.MeasuringUnit,    // enum -> enum
+                Note = dto.Note ?? string.Empty,
+                IsDeleted = dto.IsDeleted,
+                CreatedOn = dto.CreatedOn,
+                CreatedBy = dto.CreatedBy,
+                ModifiedOn = dto.ModifiedOn,
+                ModifiedBy = dto.ModifiedBy
+                };
+
+        // DTO -> VM (edit form)
+        private static LocomotiveFormModel ToVm(LocomotiveFormDto dto)
+            => new LocomotiveFormModel
+                {
+                Number = dto.Number,
+                LocomotiveType = dto.LocomotiveType,   // enum -> enum
+                MeasuringUnit = dto.MeasuringUnit,    // enum -> enum
+                Note = dto.Note
+                };
+
+        // VM -> DTO (create/edit)
+        private static LocomotiveFormDto ToDto(LocomotiveFormModel vm)
+            => new LocomotiveFormDto(
+                vm.Number,
+                vm.LocomotiveType,   // enum -> enum
+                vm.MeasuringUnit,    // enum -> enum
+                vm.Note
+            );
         }
     }

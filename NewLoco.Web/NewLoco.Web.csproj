@@ -1,31 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.23" />
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.23" />
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.23" />
+	</ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>aspnet-NewLoco.Web-bea17b7d-743b-44e7-ba89-9e25613fe7a7</UserSecretsId>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="8.0.24" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.24" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.24" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="8.0.23" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.24" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.24" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\GCommon\GCommon.csproj" />
-    <ProjectReference Include="..\NewLoco.Data.Models\NewLoco.Data.Models.csproj" />
-    <ProjectReference Include="..\NewLoco.Service.Core\NewLoco.Service.Core.csproj" />
-    <ProjectReference Include="..\NewLoco.Web.ViewModels\NewLoco.Web.ViewModels.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Views\ShiftWorks\" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<ProjectReference Include="..\GCommon\GCommon.csproj" />
+		<ProjectReference Include="..\NewLoco.Service.Core\NewLoco.Service.Core.csproj" />
+		<ProjectReference Include="..\NewLoco.Data\NewLoco.Data.csproj" />
+	</ItemGroup>
 </Project>

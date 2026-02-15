@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+
 @{
     // Page title and current user name
     var title = ViewData["Title"] as string ?? "NewLoco";
@@ -16,6 +17,7 @@
     // Fuel submenu opens when we are inside Fuels controller
     bool isFuels = currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase);
     }
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,6 +36,9 @@
 
     <!-- App CSS -->
     <link rel="stylesheet" href="~/css/site-layout.css" asp-append-version="true" />
+
+    @* Per-view optional styles (fixes the 'Styles section not rendered' error) *@
+    @RenderSection("Styles", required: false)
 </head>
 <body>
     <!-- Top navbar -->

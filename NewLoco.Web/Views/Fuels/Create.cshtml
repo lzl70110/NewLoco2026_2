@@ -1,66 +1,147 @@
 ﻿@model NewLoco.Web.ViewModels.Fuels.CreateFuelViewModel
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using NewLoco.Web.ViewModels.Fuels
 @{
-    ViewData["Title"] = "Add New Fuel Record";
+    ViewData["Title"] = "New Fuel Input";
     }
 
-<h2>@ViewData["Title"]</h2>
+<style>
+    /* Narrow, centered create form */
+    .create-narrow {
+        max-width: 480px;
+        background: #fff;
+    }
 
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
+        .create-narrow .form-control, .create-narrow .form-select {
+            padding: 0.35rem 0.55rem;
+            font-size: 0.9rem;
+            line-height: 1.2;
+        }
 
-    <div class="mb-3">
-        <label asp-for="LocomotiveId" class="form-label"></label>
-        <select asp-for="LocomotiveId" class="form-select" asp-items="ViewBag.Locomotives" onchange="setInitialFuel(this.value)">
-            <option value="">-- Select Locomotive --</option>
-        </select>
-        <span asp-validation-for="LocomotiveId" class="text-danger"></span>
-    </div>
+        .create-narrow .form-label {
+            font-size: 0.85rem;
+            margin-bottom: 2px;
+        }
 
-    <div class="mb-3">
-        <label asp-for="Date" class="form-label"></label>
-        <input asp-for="Date" class="form-control" type="date" />
-        <span asp-validation-for="Date" class="text-danger"></span>
-    </div>
+        .create-narrow .btn {
+            padding: 0.25rem 0.6rem;
+            font-size: 0.85rem;
+            line-height: 1.1;
+        }
 
-    <div class="mb-3">
-        <label asp-for="InitialFuel" class="form-label"></label>
-        <input asp-for="InitialFuel" class="form-control" step="0.01" />
-        <span asp-validation-for="InitialFuel" class="text-danger"></span>
-    </div>
+        .create-narrow .mb-2 {
+            margin-bottom: .4rem !important;
+        }
 
-    <div class="mb-3">
-        <label asp-for="FinalFuel" class="form-label"></label>
-        <input asp-for="FinalFuel" class="form-control" step="0.01" />
-        <span asp-validation-for="FinalFuel" class="text-danger"></span>
-    </div>
+        .create-narrow .mt-2 {
+            margin-top: .4rem !important;
+        }
+</style>
 
-    <div class="mb-3">
-        <label asp-for="Refueled" class="form-label"></label>
-        <input asp-for="Refueled" class="form-control" step="0.01" />
-        <span asp-validation-for="Refueled" class="text-danger"></span>
-    </div>
+<h2 class="h5 mb-3">@ViewData["Title"]</h2>
 
-    <div class="mb-3">
-        <label asp-for="Note" class="form-label"></label>
-        <textarea asp-for="Note" class="form-control" rows="2"></textarea>
-        <span asp-validation-for="Note" class="text-danger"></span>
-    </div>
+<div class="create-narrow mx-auto p-3 border rounded shadow-sm bg-white">
+    <!-- Proper form tag (POST to Create) -->
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
 
-    <button type="submit" class="btn btn-success">Save</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-</form>
+        <!-- Locomotive selector -->
+        <div class="mb-2">
+            <label asp-for="LocomotiveId" class="form-label">Locomotive</label>
+
+                @{
+                // Try to read list from ViewBag
+                var locoList = ViewBag.Locomotives as IEnumerable<SelectListItem>;
+                }
+
+            @if (locoList != null && locoList.Any())
+                {
+                <select asp-for="LocomotiveId" class="form-select" asp-items="locoList">
+                    <option value="" disabled selected>-- choose --</option>
+                </select>
+                }
+            else
+                {
+                <!-- Diagnostics: show an alert if list is missing/empty -->
+                <div class="alert alert-warning py-1">
+                    No locomotives to choose from. Please check controller population (ViewBag.Locomotives).
+                </div>
+                <!-- Fallback: numeric input so you can continue testing -->
+                <input asp-for="LocomotiveId" type="number" class="form-control" />
+                }
+
+            <span asp-validation-for="LocomotiveId" class="text-danger"></span>
+        </div>
+
+        <!-- Date (use asp-format for proper yyyy-MM-dd) -->
+        <div class="mb-2">
+            <label asp-for="Date" class="form-label"></label>
+            <input asp-for="Date" class="form-control" type="date" asp-format="{0:yyyy-MM-dd}" />
+            <span asp-validation-for="Date" class="text-danger"></span>
+        </div>
+
+        <!-- Two-column compact grid for numbers -->
+        <div class="row g-2">
+            <div class="col-6">
+                <label asp-for="InitialFuel" class="form-label"></label>
+                <input asp-for="InitialFuel" class="form-control" type="number" step="0.01" inputmode="decimal" id="InitialFuel" />
+                <span asp-validation-for="InitialFuel" class="text-danger"></span>
+            </div>
+            <div class="col-6">
+                <label asp-for="FinalFuel" class="form-label"></label>
+                <input asp-for="FinalFuel" class="form-control" type="number" step="0.01" inputmode="decimal" id="FinalFuel" />
+                <span asp-validation-for="FinalFuel" class="text-danger"></span>
+            </div>
+            <div class="col-6">
+                <label asp-for="Refueled" class="form-label"></label>
+                <input asp-for="Refueled" class="form-control" type="number" step="0.01" inputmode="decimal" id="Refueled" />
+                <span asp-validation-for="Refueled" class="text-danger"></span>
+            </div>
+            <div class="col-6">
+                <label class="form-label">Consumption</label>
+                <!-- Client shows computed value; server recomputes for trust -->
+                <input class="form-control" readonly id="Consumption" />
+            </div>
+        </div>
+
+        <!-- Note -->
+        <div class="mb-2 mt-2">
+            <label asp-for="Note" class="form-label"></label>
+            <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="Note" class="text-danger"></span>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a asp-action="FuelReport" class="btn btn-outline-secondary btn-sm">Cancel</a>
+        </div>
+    </form>
+</div>
 
     @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
-
     <script>
-        function setInitialFuel(locomotiveId) {
-            if (!locomotiveId) return;
-            $.getJSON('@Url.Action("GetLastFuel")', { locomotiveId: locomotiveId }, function (data) {
-                $('input[name="InitialFuel"]').val(data);
-            });
+        // Normalize decimal input: support both comma and dot
+        function toNumber(val) {
+            if (val === undefined || val === null) return 0;
+            if (typeof val !== 'string') val = String(val);
+            val = val.replace(',', '.').trim();
+            var num = parseFloat(val);
+            return isNaN(num) ? 0 : num;
         }
+        function updateConsumption() {
+            var initial = toNumber(document.getElementById('InitialFuel').value);
+            var finalVal = toNumber(document.getElementById('FinalFuel').value);
+            var refueled = toNumber(document.getElementById('Refueled').value);
+            var consumption = (initial + refueled - finalVal);
+            document.getElementById('Consumption').value = consumption.toFixed(2);
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            ['InitialFuel', 'FinalFuel', 'Refueled'].forEach(id => {
+                var el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateConsumption);
+            });
+            updateConsumption();
+        });
     </script>
     }

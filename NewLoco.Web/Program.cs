@@ -4,6 +4,7 @@ using NewLoco.Data;
 using NewLoco.Service.Core;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Service.Core.Services;
+ 
 
 namespace NewLoco.Web // препоръчително, вместо .Data
     {
@@ -25,7 +26,7 @@ namespace NewLoco.Web // препоръчително, вместо .Data
             // MVC
             builder.Services.AddControllersWithViews();
 
-            // Identity (всички логнати = "админ" за сега)
+            // Identity  
             builder.Services
                 .AddDefaultIdentity<IdentityUser>(options =>
                 {
@@ -47,7 +48,7 @@ namespace NewLoco.Web // препоръчително, вместо .Data
                 })
                 .AddEntityFrameworkStores<LocoDbContext>();
 
-            // (Опционално) фиксиране на пътищата на cookie-то
+            
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Identity/Account/Login";
@@ -55,10 +56,10 @@ namespace NewLoco.Web // препоръчително, вместо .Data
                 options.AccessDeniedPath = "/Identity/Account/AccessDenied";
             });
 
-            // Authorization – без роли/политики засега
+            // Authorization  
             builder.Services.AddAuthorization();
 
-            // DI за нашите услуги
+            // DI  
             builder.Services.AddScoped<IFuelService, FuelService>();
             builder.Services.AddScoped<ILocomotiveService, LocomotiveService>();
 

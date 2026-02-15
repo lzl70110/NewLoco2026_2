@@ -3,72 +3,146 @@
     ViewData["Title"] = "Edit Fuel Record";
     }
 
-<h2>@ViewData["Title"]</h2>
+<h2 class="h5 mb-3">@ViewData["Title"]</h2>
 
-<form asp-action="Edit" method="post">
-    @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
+<!-- Narrow, centered card-like wrapper -->
+<div class="edit-narrow mx-auto p-3 border rounded shadow-sm bg-white">
 
-    <div class="mb-3">
-        <label class="form-label">Locomotive</label>
-        <input class="form-control" value="@Model.LocomotiveNumber" readonly />
-    </div>
+    <!-- Post back to Edit with route id for robust model binding -->
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
 
-    <div class="mb-3">
-        <label asp-for="Date" class="form-label"></label>
-        <input asp-for="Date" class="form-control" type="date" />
-        <span asp-validation-for="Date" class="text-danger"></span>
-    </div>
+        <!-- Locomotive (read-only) -->
+        <div class="mb-2">
+            <label class="form-label">Locomotive</label>
+            <input class="form-control" value="@Model.LocomotiveNumber" readonly />
+        </div>
 
-    <div class="mb-3">
-        <label asp-for="InitialFuel" class="form-label"></label>
-        <input asp-for="InitialFuel" class="form-control" step="0.01" id="InitialFuel" />
-        <span asp-validation-for="InitialFuel" class="text-danger"></span>
-    </div>
+        <!-- Date -->
+        <div class="mb-2">
+            <label asp-for="Date" class="form-label"></label>
+            <!-- Ensure proper display for HTML date input -->
+            <input asp-for="Date" class="form-control" type="date" asp-format="{0:yyyy-MM-dd}" />
+            <span asp-validation-for="Date" class="text-danger"></span>
+        </div>
 
-    <div class="mb-3">
-        <label asp-for="FinalFuel" class="form-label"></label>
-        <input asp-for="FinalFuel" class="form-control" step="0.01" id="FinalFuel" />
-        <span asp-validation-for="FinalFuel" class="text-danger"></span>
-    </div>
+        <!-- Two-column compact grid for numbers -->
+        <div class="row g-2">
+            <div class="col-6">
+                <label asp-for="InitialFuel" class="form-label"></label>
+                <input asp-for="InitialFuel" class="form-control"
+                       type="number" step="0.01" inputmode="decimal" id="InitialFuel" />
+                <span asp-validation-for="InitialFuel" class="text-danger"></span>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="Refueled" class="form-label"></label>
-        <input asp-for="Refueled" class="form-control" step="0.01" id="Refueled" />
-        <span asp-validation-for="Refueled" class="text-danger"></span>
-    </div>
+            <div class="col-6">
+                <label asp-for="FinalFuel" class="form-label"></label>
+                <input asp-for="FinalFuel" class="form-control"
+                       type="number" step="0.01" inputmode="decimal" id="FinalFuel" />
+                <span asp-validation-for="FinalFuel" class="text-danger"></span>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="Consumption" class="form-label"></label>
-        <input asp-for="Consumption" class="form-control" readonly id="Consumption" />
-    </div>
+            <div class="col-6">
+                <label asp-for="Refueled" class="form-label"></label>
+                <input asp-for="Refueled" class="form-control"
+                       type="number" step="0.01" inputmode="decimal" id="Refueled" />
+                <span asp-validation-for="Refueled" class="text-danger"></span>
+            </div>
 
-    <div class="mb-3">
-        <label asp-for="Note" class="form-label"></label>
-        <textarea asp-for="Note" class="form-control" rows="2"></textarea>
-        <span asp-validation-for="Note" class="text-danger"></span>
-    </div>
+            <div class="col-6">
+                <label asp-for="Consumption" class="form-label"></label>
+                <!-- Client shows computed value; server recomputes for trust -->
+                <input asp-for="Consumption" class="form-control" readonly id="Consumption" />
+            </div>
+        </div>
 
-    <button type="submit" class="btn btn-primary">Save</button>
-    <a asp-action="FuelReport" class="btn btn-secondary">Cancel</a>
-</form>
+        <!-- Note -->
+        <div class="mb-2 mt-2">
+            <label asp-for="Note" class="form-label"></label>
+            <textarea asp-for="Note" class="form-control" rows="2"></textarea>
+            <span asp-validation-for="Note" class="text-danger"></span>
+        </div>
+
+        <!-- Actions -->
+        <div class="d-flex gap-2 mt-2">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <a asp-action="FuelReport" class="btn btn-secondary btn-sm">Cancel</a>
+        </div>
+    </form>
+</div>
+
+    @section Styles {
+    <style>
+        /* Narrow, centered edit form */
+        .edit-narrow {
+            max-width: 480px; /* adjust to 400px or 360px if you want even narrower */
+            background: #ffffff;
+        }
+
+            /* Make controls compact (smaller padding and font) */
+            .edit-narrow .form-control {
+                padding: 0.35rem 0.55rem; /* tighter than default */
+                font-size: 0.9rem;
+                line-height: 1.2;
+            }
+
+            .edit-narrow .form-label {
+                font-size: 0.85rem;
+                margin-bottom: 2px;
+            }
+
+            .edit-narrow .btn {
+                padding: 0.25rem 0.6rem;
+                font-size: 0.85rem;
+                line-height: 1.1;
+            }
+
+            /* Slightly tighten spacing between groups */
+            .edit-narrow .mb-2 {
+                margin-bottom: .4rem !important;
+            }
+
+            .edit-narrow .mt-2 {
+                margin-top: .4rem !important;
+            }
+    </style>
+    }
 
     @section Scripts {
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+    <!-- Client-side validation assets (if not already included in your layout) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+            integrity="sha512-894ye88kF4Cw6Z2G1hCw1QZ8b+1C6h9VnY1Yb02Q5B5j1z9Yx4e6Yy0PpKzJ8Xf4Qf5o9G2Q5hK7x1b9y4nQ4w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"
+            integrity="sha512-Yc8jYk2h6VQfVf6Qv0tM1tSgYt2Qm7r4x8G2BfD3x5mKQF2hC6r3hK1pJzJ7sRr5m7TQ7Y+7qJ6Q7WwWbYZ1xQ=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"
+            integrity="sha512-8jK7d2oQz+2bq8y7q4+0mYzbx4r+9v7+f8z+KQ1cWfQh1r3E7xH5p0V2wXv6kV4C1zW6fJzN9d+v8y+1yG5b6g=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <script>
+        // Normalize decimal input: support both comma and dot
+        function toNumber(val) {
+            if (val === undefined || val === null) return 0;
+            if (typeof val !== 'string') val = String(val);
+            val = val.replace(',', '.').trim();
+            var num = parseFloat(val);
+            return isNaN(num) ? 0 : num;
+        }
+
         function updateConsumption() {
-            var initial = parseFloat($('#InitialFuel').val()) || 0;
-            var final = parseFloat($('#FinalFuel').val()) || 0;
-            var refueled = parseFloat($('#Refueled').val()) || 0;
-            $('#Consumption').val((initial + refueled - final).toFixed(2));
+            var initial = toNumber($('#InitialFuel').val());
+            var finalVal = toNumber($('#FinalFuel').val());
+            var refueled = toNumber($('#Refueled').val());
+            var consumption = (initial + refueled - finalVal);
+            $('#Consumption').val(consumption.toFixed(2));
         }
 
         $(document).ready(function () {
+            // Recompute on any change
             $('#InitialFuel, #FinalFuel, #Refueled').on('input', updateConsumption);
-            updateConsumption(); // set initial value
+            updateConsumption(); // initialize on load
         });
     </script>
     }

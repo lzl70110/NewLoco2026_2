@@ -1,4 +1,6 @@
-﻿|-- GCommon
+﻿|-- .github
+  |-- workflows
+|-- GCommon
   |-- EntityValidationConstants.cs
   |-- Enums
     |-- LocomotiveType.cs
@@ -16,26 +18,28 @@
     |-- ShiftWorkConfiguration.cs
   |-- LocoDbContext.cs
   |-- Migrations
-    |-- 20260212125005_initial.cs
-    |-- 20260212125005_initial.Designer.cs
-    |-- 20260212204449_AdedEntities.cs
-    |-- 20260212204449_AdedEntities.Designer.cs
-    |-- 20260212230557_SeedSampleLocomotivesAndData.cs
-    |-- 20260212230557_SeedSampleLocomotivesAndData.Designer.cs
+    |-- 20260215091901_SeedSamle.cs
+    |-- 20260215091901_SeedSamle.Designer.cs
     |-- LocoDbContextModelSnapshot.cs
 |-- NewLoco.Service.Core
   |-- Contracts
     |-- IFuelService.cs
     |-- ILocomotiveService.cs
+    |-- IShiftWorkService.cs
+    |-- LocomotiveDtos.cs
   |-- FuelService.cs
   |-- LocomotiveService.cs
+  |-- ShifWorkService.cs
+|-- NewLoco.TestS
+  |-- TestHelpers
+    |-- TestDbContextFactory.cs
 |-- NewLoco.Web
 |-- NewLoco.Web.ViewModels
   |-- ErrorViewModel.cs
   |-- Fuels
     |-- CreateFuelViewModel.cs
     |-- FuelAllViewModel.cs
-    |-- FuelsFullDetailsViewModel.cs
+    |-- FuelsBasicDetailsViewModel.cs
   |-- Locomotives
     |-- CreateLocomotiveViewModel.cs
     |-- EditLocomotiveViewModel.cs
@@ -44,6 +48,10 @@
     |-- LocomotiveDetailsViewModel.cs
     |-- LocomotiveFormModel.cs
     |-- LocomotiveNumberViewModel.cs
+  |-- ShiftWorks
+    |-- CreateShiftWorkViewModel.cs
+    |-- EditShiftWorkViewModel.cs
+    |-- ShiftWorksViewModel.cs
   |-- appsettings.Development.json
   |-- appsettings.json
   |-- Areas
@@ -75,9 +83,12 @@
           |-- Register.cshtml.cs
   |-- Controllers
     |-- BaseController.cs
+    |-- CalculatorController.cs
+    |-- CalendarController.cs
     |-- FuelsController.cs
     |-- HomeController.cs
-    |-- LocomotiveController.cs
+    |-- PublicLocomotivesController.cs
+    |-- ShiftWorksController.cs
   |-- Program.cs
   |-- Properties
     |-- launchSettings.json
@@ -86,6 +97,10 @@
   |-- Views
     |-- _ViewImports.cshtml
     |-- _ViewStart.cshtml
+    |-- Calculator
+      |-- Index.cshtml
+    |-- Calendar
+      |-- Index.cshtml
     |-- Fuels
       |-- Create.cshtml
       |-- Delete.cshtml
@@ -96,7 +111,7 @@
     |-- Home
       |-- Index.cshtml
       |-- Privacy.cshtml
-    |-- Locomotives
+    |-- PublicLocomotives
       |-- Details.cshtml
       |-- Index.cshtml
     |-- Shared
@@ -105,6 +120,11 @@
       |-- _Sidebar.cshtml
       |-- _ValidationScriptsPartial.cshtml
       |-- Error.cshtml
+    |-- Shiftorks
+    |-- ShiftWorks
+      |-- Create.cshtml
+      |-- Edit.cshtml
+      |-- Index.cshtml
   |-- wwwroot
     |-- css
     |-- js

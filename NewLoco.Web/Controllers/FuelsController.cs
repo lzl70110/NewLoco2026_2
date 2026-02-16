@@ -4,13 +4,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.Fuels;
+using System.Globalization;
+using System.Text;
 
 namespace NewLoco.Web.Controllers
     {
     [Authorize]
     public class FuelsController : BaseController
         {
-        // Single set of dependencies (no duplicates)
         private readonly IFuelService fuelService;
         private readonly ILocomotiveService locoService;
         private readonly ILogger<FuelsController> logger;
@@ -20,47 +21,41 @@ namespace NewLoco.Web.Controllers
             ILocomotiveService locoService,
             ILogger<FuelsController> logger)
             {
-            // Assign injected services
             this.fuelService = fuelService ?? throw new ArgumentNullException(nameof(fuelService));
             this.locoService = locoService ?? throw new ArgumentNullException(nameof(locoService));
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             }
 
-        // GET: /Fuels/FuelReport
         public IActionResult FuelReport()
             {
-            // Read-only report list
             var vm = fuelService.GetAll();
             return View(vm);
             }
 
-        // Helper: populate locomotives dropdown (DTO -> SelectListItem)
         private async Task PopulateLocomotivesAsync()
             {
-            // Use DTO-based service to keep Service.Core clean
             var options = await locoService.GetOptionsAsync();
             ViewBag.Locomotives = options
                 .Select(o => new SelectListItem { Value = o.Id.ToString(), Text = o.Number })
                 .ToList();
             }
 
-        // GET: /Fuels/Create
         public async Task<IActionResult> Create()
             {
-            // Provide defaults for new record + dropdown data
             await PopulateLocomotivesAsync();
             return View(fuelService.CreateModel());
             }
 
-        // POST: /Fuels/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateFuelViewModel model)
             {
-            // Basic server-side validation
+            // игнорираме InitialFuel от клиента – сървърът ще го изчисли
+            ModelState.Remove(nameof(CreateFuelViewModel.InitialFuel));
+            ModelState.Remove(nameof(CreateFuelViewModel.Consumption));
+
             if (!ModelState.IsValid)
                 {
-                // Repopulate dropdown on validation failure
                 await PopulateLocomotivesAsync();
                 return View(model);
                 }
@@ -81,22 +76,28 @@ namespace NewLoco.Web.Controllers
                 }
             }
 
-        // GET: /Fuels/Edit/5
         public IActionResult Edit(int id)
             {
-            // Load record for editing (service excludes soft-deleted)
             var vm = fuelService.GetForEdit(id);
             if (vm == null) return NotFound();
             return View(vm);
             }
 
-        // POST: /Fuels/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, FuelAllViewModel model)
             {
-            // Defense-in-depth: route id must match model id
             if (id != model.Id) return BadRequest();
+
+            string[] nonEditableKeys =
+            {
+                nameof(FuelAllViewModel.LocomotiveNumber),
+                nameof(FuelAllViewModel.InitialFuel),
+                nameof(FuelAllViewModel.Consumption),
+                nameof(FuelAllViewModel.IsDeleted),
+                "CreatedOn","CreatedByUserName","EditedBy","EditedOn"
+            };
+            foreach (var key in nonEditableKeys) ModelState.Remove(key);
 
             if (!ModelState.IsValid) return View(model);
 
@@ -115,7 +116,6 @@ namespace NewLoco.Web.Controllers
                 }
             }
 
-        // POST: /Fuels/Delete/5  (soft-delete)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
@@ -134,7 +134,6 @@ namespace NewLoco.Web.Controllers
             return RedirectToAction(nameof(FuelReport));
             }
 
-        // (Optional) POST: /Fuels/DeleteConfirmed/5 — keep only if your view posts to this action
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -153,7 +152,6 @@ namespace NewLoco.Web.Controllers
             return RedirectToAction(nameof(FuelReport));
             }
 
-        // POST: /Fuels/UndoDelete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UndoDelete(int id)
@@ -171,5 +169,41 @@ namespace NewLoco.Web.Controllers
                 }
             return RedirectToAction(nameof(FuelReport));
             }
+
+        [HttpGet]
+        public async Task<IActionResult> PrevFinal(int locoId, string date)
+            {
+            if (string.IsNullOrWhiteSpace(date)) return Json(new { value = 0m });
+
+            if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+                {
+                if (!DateTime.TryParse(date, CultureInfo.GetCultureInfo("bg-BG"), DateTimeStyles.None, out parsed))
+                    return Json(new { value = 0m });
+                }
+
+            var value = await fuelService.GetPrevFinalAsync(locoId, parsed);
+            return Json(new { value });
+            }
+
+        //        private static ContentResult DiagnosticGate(string details, string continueUrl)
+        //            {
+        //            var html = $@"
+        //<!DOCTYPE html>
+        //<html><head><meta charset=""utf-8"" /><title>POST Diagnostics</title></head>
+        //<body><pre>{System.Net.WebUtility.HtmlEncode(details)}</pre><a href=""{continueUrl}"">Continue</a></body></html>";
+        //            return new ContentResult { Content = html, ContentType = "text/html; charset=utf-8", StatusCode = 200 };
+        //            }
+
+        //        private static string BuildPostDiagnostics(string title, object? model, Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary modelState, HttpRequest request)
+        //            {
+        //            var sb = new StringBuilder();
+        //            sb.AppendLine(title);
+        //            sb.AppendLine(new string('-', 64));
+        //            if (request.HasFormContentType)
+        //                foreach (var kv in request.Form) sb.AppendLine($"{kv.Key}={string.Join(",", kv.Value)}");
+        //            sb.AppendLine($"IsValid={modelState.IsValid}");
+        //            return sb.ToString();
+        //            }
+        //        }
         }
     }

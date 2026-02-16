@@ -3,7 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using NewLoco.Data;
 using NewLoco.Data.Models;
 using NewLoco.Service.Core.Contracts;
-using static NewLoco.Service.Core.Contracts.LocomotiveDtos;
+using  NewLoco.Service.Core;
+
 using  NewLoco.GCommon.Enums;
 
 namespace NewLoco.Service.Core;
@@ -35,7 +36,9 @@ public class LocomotiveService : ILocomotiveService
             .Select(l => new LocoNumberDto(
                 l.Id, l.Number,
                 l.LocomotiveType,
-                l.MeasuringUnit, l.IsDeleted))
+                l.MeasuringUnit,
+                l.IsDeleted,
+                l.Note))
             .ToListAsync();
         }
 

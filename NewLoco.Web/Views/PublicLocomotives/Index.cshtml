@@ -1,37 +1,23 @@
-﻿@model List<string>
-@{
-    ViewData["Title"] = "Locomotives";
-    }
+﻿@model List<NewLoco.Web.ViewModels.Locomotives.LocomotiveNumberViewModel>
 
-<div class="container-fluid">
-    <h2 class="mb-3">Locomotives</h2>
+<h2 class="h4 mb-3">Our Locomotives</h2>
 
-    <div class="mt-2" style="max-width: 320px;">
-        <table class="table table-sm table-striped table-hover" style="max-width: 320px; width: 60%;">
-            <thead class="table-dark">
-                <tr>
-                    <th class="text-center" style="width: 120px;">Number</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Count > 0)
-                    {
-                    foreach (var number in Model)
-                        {
-                        <tr>
-                            <td class="text-center">@number</td>
-
-                        </tr>
-                        }
-                    }
-                else
-                    {
-                    <tr>
-                        <td class="text-muted">No locomotives.</td>
-                    </tr>
-                    }
-            </tbody>
-        </table>
- 
-    </div>
-</div>
+<table class="table table-sm table-striped table-hover align-middle w-auto">
+    <thead class="table-light">
+        <tr>
+            <th>#</th>
+            <th>Type</th>
+            <th>Unit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var l in Model)
+            {
+            <tr class="@(l.IsDeleted ? "table-secondary" : "")">
+                <td class="text-nowrap">@l.Number</td>
+                <td>@l.LocomotiveType</td>
+                <td>@l.MeasuringUnit</td>
+            </tr>
+            }
+    </tbody>
+</table>

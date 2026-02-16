@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using static NewLoco.GCommon.EntityValidationConstants.Fuel;
- 
 
 namespace NewLoco.Web.ViewModels.Fuels
     {
@@ -12,10 +11,9 @@ namespace NewLoco.Web.ViewModels.Fuels
 
         [Required]
         [DataType(DataType.Date)]
-        public DateTime? Date { get; set; }
+        public DateTime Date { get; set; }
 
-        [Required]
-        [Range(ValueMin, ValueMax)]
+         
         public decimal InitialFuel { get; set; }
 
         [Required]
@@ -25,7 +23,10 @@ namespace NewLoco.Web.ViewModels.Fuels
         [Range(ValueMin, ValueMax)]
         public decimal Refueled { get; set; }
 
-        [StringLength(NoteMaxLength,MinimumLength =5)]
+         
+        public decimal Consumption { get; set; }
+
+        [StringLength(NoteMaxLength, MinimumLength = 5)]
         public string? Note { get; set; }
         }
     }

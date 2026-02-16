@@ -1,61 +1,125 @@
 ﻿@model List<NewLoco.Web.ViewModels.Fuels.FuelAllViewModel>
 
-<h2>Fuel Report</h2>
+<h2 class="h4 mb-3">Fuel Report</h2>
 
-<table class="table table-striped table-bordered">
-    <thead class="table-dark">
-        <tr>
-            <th>Locomotive</th>
-            <th>Date</th>
-            <th>Initial Fuel</th>
-            <th>Final Fuel</th>
-            <th>Consumption</th>
-            <th>Refueled</th>
-            <th>Note</th>
-            <th>Created On</th>
-            <th>Created By</th>
-            <th>Edited On</th>
-            <th>Edited By</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var fuel in Model)
-            {
-            var rowClass = fuel.IsDeleted ? "table-danger" : "";
-            <tr class="@rowClass">
-                <td>@fuel.LocomotiveNumber</td>
-                <td>@fuel.Date.ToString("dd.MM.yyyy")</td>
-                <td>@fuel.InitialFuel</td>
-                <td>@fuel.FinalFuel</td>
-                <td>@fuel.Consumption</td>
-                <td>@fuel.Refueled</td>
-                <td>@fuel.Note</td>
-                <td>@fuel.CreatedOn.ToString("dd.MM.yyyy")</td>
-                <td>@fuel.CreatedByUserName</td>
-                <td>@fuel.EditedOn?.ToString("dd.MM.yyyy ")</td>
-                <td>@fuel.EditedBy</td>
-                <td>
-                    @if (!fuel.IsDeleted)
-                        {
-                        <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@fuel.Id">Edit</a>
-                        <form asp-action="DeleteConfirmed" asp-route-id="@fuel.Id" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-                        </form>
-                        }
-                    else
-                        {
-                        <form asp-action="UndoDelete" asp-route-id="@fuel.Id" method="post" style="display:inline">
-                            @Html.AntiForgeryToken()
-                            <button class="btn btn-sm btn-success" type="submit">Undo</button>
-                        </form>
-                        }
-                </td>
+<div class="table-responsive" style="max-height: calc(100vh - 200px);">
+    <table class="table table-sm table-striped table-bordered table-hover align-middle report-narrow w-100">
+        <thead class="table-dark sticky-top">
+            <tr>
+                <th class="text-nowrap">Locomotive</th>
+                <th class="text-nowrap">Date</th>
+                <th class="text-end text-nowrap">Initial Fuel</th>
+                <th class="text-end text-nowrap">Final Fuel</th>
+                <th class="text-end text-nowrap">Consumption</th>
+                <th class="text-end text-nowrap">Refueled</th>
+                <th>Note</th>
+                <th class="text-nowrap">Created On</th>
+                <th class="text-nowrap">Created By</th>
+                <th class="text-nowrap">Edited On</th>
+                <th class="text-nowrap">Edited By</th>
+                <th class="text-end text-nowrap">Actions</th>
             </tr>
-            }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var fuel in Model)
+                {
+                var rowClass = fuel.IsDeleted ? "table-secondary" : "";
+                <tr class="@rowClass">
+                    <td class="text-nowrap">@fuel.LocomotiveNumber</td>
+                    <td class="text-nowrap">@fuel.Date.ToString("yyyy-MM-dd")</td>
 
-<a asp-action="Create" class="btn btn-success mt-3">Add New Fuel Record</a>
-<a asp-controller="Home" asp-action="Index" class="btn btn-secondary mt-3">Back to Home</a>
+                    <!-- numeric columns right-aligned and formatted -->
+                    <td class="text-end text-nowrap">@fuel.InitialFuel.ToString("0.00")</td>
+                    <td class="text-end text-nowrap">@fuel.FinalFuel.ToString("0.00")</td>
+                    <td class="text-end text-nowrap">@fuel.Consumption.ToString("0.00")</td>
+                    <td class="text-end text-nowrap">@fuel.Refueled.ToString("0.00")</td>
+
+                    <!-- note truncated with tooltip -->
+                    <td class="text-truncate" style="max-width: 240px;" title="@fuel.Note">@fuel.Note</td>
+
+                    <td class="text-nowrap">@fuel.CreatedOn.ToString("yyyy-MM-dd")</td>
+                    <td class="text-nowrap">@fuel.CreatedByUserName</td>
+                    <td class="text-nowrap">@fuel.EditedOn?.ToString("yyyy-MM-dd")</td>
+                    <td class="text-nowrap">@fuel.EditedBy</td>
+                    <td class="text-end text-nowrap">
+                        @if (!fuel.IsDeleted)
+                            {
+                            <a class="btn btn-primary btn-xs" asp-action="Edit" asp-route-id="@fuel.Id" title="Edit">Edit</a>
+                            <form asp-action="DeleteConfirmed" asp-route-id="@fuel.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-danger btn-xs" type="submit" title="Delete"
+                                        onclick="return confirm('Delete this entry?');">
+                                    Delete
+                                </button>
+                            </form>
+                            }
+                        else
+                            {
+                            <form asp-action="UndoDelete" asp-route-id="@fuel.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button class="btn btn-warning btn-xs" type="submit" title="Restore">Restore</button>
+                            </form>
+                            }
+                    </td>
+                </tr>
+                }
+        </tbody>
+
+        <!-- Optional: lightweight footer totals for the visible rows -->
+        <tfoot class="table-light">
+            <tr>
+                <th colspan="4" class="text-end">Totals (visible):</th>
+                <th id="ft-consumption" class="text-end"></th>
+                <th id="ft-refueled" class="text-end"></th>
+                <th colspan="6"></th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<div class="mt-3 d-flex gap-2">
+    <a asp-action="Create" class="btn btn-success btn-sm">Add New Fuel Record</a>
+    <a asp-controller="Home" asp-action="Index" class="btn btn-secondary btn-sm">Back to Home</a>
+</div>
+
+    @section Styles {
+    <style>
+        /* compact table rows */
+        .report-narrow th, .report-narrow td {
+            padding: .25rem .45rem;
+            font-size: .9rem;
+        }
+        /* sticky header when scrolling */
+        .report-narrow thead.sticky-top {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        /* extra small buttons for actions */
+        .btn-xs {
+            padding: .125rem .45rem;
+            font-size: .8rem;
+            line-height: 1.1;
+        }
+    </style>
+    }
+
+    @section Scripts {
+    <script>
+        // optional: compute totals (visible rows) for Consumption and Refueled
+        (function () {
+            const rows = document.querySelectorAll('.report-narrow tbody tr');
+            let sumCons = 0, sumRef = 0;
+            rows.forEach(r => {
+                // indexes: 0 Loco, 1 Date, 2 Initial, 3 Final, 4 Consumption, 5 Refueled
+                const cons = parseFloat((r.children[4]?.textContent || '0').replace(',', '.')) || 0;
+                const ref  = parseFloat((r.children[5]?.textContent || '0').replace(',', '.')) || 0;
+                sumCons += cons; sumRef += ref;
+            });
+            const c = document.getElementById('ft-consumption');
+            const f = document.getElementById('ft-refueled');
+            if (c) c.textContent = sumCons.toFixed(2);
+            if (f) f.textContent = sumRef.toFixed(2);
+        })();
+    </script>
+    }

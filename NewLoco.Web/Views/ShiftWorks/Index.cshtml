@@ -1,0 +1,107 @@
+﻿@model IEnumerable<NewLoco.Web.ViewModels.ShiftWorks.ShiftWorksViewModel>
+
+@{
+    ViewData["Title"] = "Shift Works";
+    }
+
+<h2 class="h5 mb-3">@ViewData["Title"]</h2>
+@* compact, inline-sized alert *@
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+    {
+    <div class="alert alert-success alert-dismissible fade show d-inline-flex align-items-center gap-2 py-1 px-2"
+         role="alert" style="max-width: 480px;">
+        <span>@ok</span>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    }
+    @*End of Alert*@
+ 
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <a asp-controller="ShiftWorks" asp-action="Create" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle"></i> New Shift
+    </a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-sm table-bordered table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width:50px;">Date</th>
+                <th style="width:60px;">Shift</th>
+                <th style="width:100px;">Locomotive</th>
+                <th style="width:100px;">Operator</th>
+                <th style="width:80px;">Start</th>
+                <th style="width:80px;">Final</th>
+                <th style="width:80px;">Total</th>
+                <th style="text-align:center; width:180px;">Note</th>
+                <th style="text-align:center; width:70px;">Status</th>
+                <th style="width:80px;">Created On</th>
+                <th style="width:80px;">Created By</th>
+               
+                
+                <th style="text-align:center; width:170px;">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (Model == null || !Model.Any())
+                {
+                <tr>
+                    <td colspan="10" class="text-center text-muted py-3">No records</td>
+                </tr>
+                }
+            else
+                {
+                foreach (var x in Model)
+                    {
+                        <td></td>
+                    <tr class="@(x.IsDeleted ? "table-danger" : "")">
+                        <td>@x.Date.ToString("dd.MM")</td>
+                        <td>@x.Shift</td>
+                        <td>@x.Locomotive</td>
+                        <td>@(string.IsNullOrWhiteSpace(x.CreatedBy) ? "-" : x.CreatedBy)</td>
+                       
+                        <td>@x.StartValue</td>
+                        <td>@x.EndValue</td>
+                        <td>@x.TotalValue</td>
+                         
+                        <td class="text-truncate" style="max-width:300px;">@x.Note</td>
+                        <td class="text-center">@((x.IsDeleted ? "Deleted" : "Active"))</td>
+                        <td>@(x.CreatedOn.ToString("dd.MM"))</td>
+                        <td>@(x.CreatedBy)</td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+
+                                <a asp-controller="ShiftWorks" asp-action="Edit" asp-route-id="@x.Id"
+                                   class="btn btn-outline-primary btn-sm">Edit</a>
+
+                                @if (!x.IsDeleted)
+                                    {
+                                    <form asp-controller="ShiftWorks" asp-action="Delete" asp-route-id="@x.Id"
+                                          method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('Delete this shift?');">
+                                            Delete
+                                        </button>
+                                    </form>
+                                    }
+                                else
+                                    {
+                                    <form asp-controller="ShiftWorks" asp-action="UndoDelete" asp-route-id="@x.Id"
+                                          method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-outline-success btn-sm">
+                                            Restore
+                                        </button>
+                                    </form>
+                                    }
+
+                            </div>
+                        </td>
+                    </tr>
+                    }
+                }
+        </tbody>
+    </table>
+</div>

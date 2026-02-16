@@ -1,22 +1,28 @@
-﻿using NewLoco.Web.ViewModels.Fuels;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using NewLoco.Web.ViewModels.Fuels;
 
-namespace NewLoco.Service.Core.Contracts;
-
-public interface IFuelService
+namespace NewLoco.Service.Core.Contracts
     {
-    IEnumerable<FuelAllViewModel> GetAll();
+    public interface IFuelService
+        {
+        IEnumerable<FuelAllViewModel> GetAll();
 
-    CreateFuelViewModel CreateModel();
+        CreateFuelViewModel CreateModel();
 
-    Task CreateAsync(CreateFuelViewModel model, string user);
+        Task CreateAsync(CreateFuelViewModel model, string user);
 
-    FuelAllViewModel? GetForEdit(int id);
+        FuelAllViewModel? GetForEdit(int id);
 
-    Task EditAsync(int id, FuelAllViewModel model, string user);
+        Task EditAsync(int id, FuelAllViewModel model, string user);
 
-    Task DeleteAsync(int id, string user);
+        Task DeleteAsync(int id, string user);
 
-    Task UndoDeleteAsync(int id, string user);
+        Task UndoDeleteAsync(int id, string user);
 
-    decimal GetLastFuel(int locomotiveId);
+        decimal GetLastFuel(int locomotiveId);
+
+        Task<decimal> GetPrevFinalAsync(int locomotiveId, DateTime date);
+        }
     }

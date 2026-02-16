@@ -1,0 +1,180 @@
+﻿@{
+    ViewData["Title"] = "Calendar";
+    }
+
+<h2 class="h5 mb-3">Calendar</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <!-- Controls -->
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="btn-group">
+                <button id="btnPrev" type="button" class="btn btn-outline-secondary btn-sm">&laquo; Prev</button>
+                <button id="btnToday" type="button" class="btn btn-outline-primary btn-sm">Today</button>
+                <button id="btnNext" type="button" class="btn btn-outline-secondary btn-sm">Next &raquo;</button>
+            </div>
+            <div class="fw-semibold" id="calTitle"></div>
+        </div>
+
+        <!-- Weekdays header -->
+        <div class="cal-header">
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div class="text-primary">Sat</div>
+            <div class="text-danger">Sun</div>
+        </div>
+
+        <!-- Days grid -->
+        <div id="calGrid" class="cal-grid"></div>
+    </div>
+</div>
+
+    @section Styles {
+    <style>
+        /* 7 equal columns using CSS Grid (prevents squeezing/centering) */
+        .cal-header,
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: .375rem; /* compact spacing between cells */
+        }
+
+        .cal-header {
+            text-align: center;
+            font-size: .85rem;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: .25rem;
+        }
+
+        .cal-cell {
+            border: 1px solid #e9ecef;
+            border-radius: .25rem;
+            min-height: 74px;
+            padding: .35rem .45rem;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cal-muted {
+            color: #adb5bd;
+            background: #f8f9fa;
+        }
+
+        .cal-today {
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 .15rem rgba(13,110,253,.25);
+        }
+
+        .cal-daynum {
+            font-size: .9rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .cal-content {
+            margin-top: .25rem;
+            font-size: .8rem;
+            color: #6c757d;
+            flex: 1 1 auto;
+        }
+
+        /* make the card body stretch horizontally so grid occupies full width */
+        .card-body {
+            width: 100%;
+        }
+    </style>
+    }
+
+    @section Scripts {
+    <script>
+        /* Simple month calendar (ISO week: Monday first) */
+        (function () {
+            const titleEl = document.getElementById('calTitle');
+            const gridEl  = document.getElementById('calGrid');
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const btnToday= document.getElementById('btnToday');
+
+            // state: first day of the month being viewed
+            let view = new Date();
+            view.setDate(1);
+
+            function fmtMonthYear(d) {
+                return d.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+            }
+
+            // Convert JS day (Sun=0..Sat=6) to Monday-first index (Mon=0..Sun=6)
+            function mondayIndex(day) { return (day + 6) % 7; }
+
+            function render() {
+                // title
+                titleEl.textContent = fmtMonthYear(view);
+
+                // compute start cell (Monday of the week containing 1st)
+                const firstOfMonth = new Date(view.getFullYear(), view.getMonth(), 1);
+                const startShift   = mondayIndex(firstOfMonth.getDay());
+                const start        = new Date(firstOfMonth);
+                start.setDate(firstOfMonth.getDate() - startShift);
+
+                // compute end cell (Sunday of the week containing last day)
+                const lastOfMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0);
+                const endShift    = 6 - mondayIndex(lastOfMonth.getDay());
+                const end         = new Date(lastOfMonth);
+                end.setDate(lastOfMonth.getDate() + endShift);
+
+                // normalize "today"
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                // build cells
+                gridEl.innerHTML = '';
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const inMonth = d.getMonth() === view.getMonth();
+
+                    // cell container
+                    const inner = document.createElement('div');
+                    inner.className = 'cal-cell' + (inMonth ? '' : ' cal-muted');
+
+                    // header with day number
+                    const head = document.createElement('div');
+                    head.className = 'd-flex justify-content-between align-items-start';
+
+                    const num = document.createElement('span');
+                    num.className = 'cal-daynum';
+                    num.textContent = d.getDate();
+
+                    head.appendChild(num);
+
+                    // highlight today
+                    const dNorm = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+                    if (+dNorm === +today) inner.classList.add('cal-today');
+
+                    // content placeholder (add events here)
+                    const content = document.createElement('div');
+                    content.className = 'cal-content';
+                    // content.textContent = ''; // keep empty for minimal view
+
+                    inner.appendChild(head);
+                    inner.appendChild(content);
+                    gridEl.appendChild(inner);
+                }
+            }
+
+            // navigation
+            btnPrev.addEventListener('click', function () { view.setMonth(view.getMonth() - 1); render(); });
+            btnNext.addEventListener('click', function () { view.setMonth(view.getMonth() + 1); render(); });
+            btnToday.addEventListener('click', function () {
+                const now = new Date();
+                view = new Date(now.getFullYear(), now.getMonth(), 1);
+                render();
+            });
+
+            render();
+        })();
+    </script>
+    }

@@ -35,7 +35,7 @@ public static class EntityValidationConstants
     public static class Fuel
     {
         public const string Dec = "decimal(9,2)";
-        public const double ValueMin = 0.0;
+        public const double ValueMin =- 0.1;
         public const double ValueMax = 5000.0;
         public const int NoteMaxLength = 1000; 
     }

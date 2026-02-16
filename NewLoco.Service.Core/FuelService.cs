@@ -4,133 +4,176 @@ using NewLoco.Data.Models;
 using NewLoco.Data.Models.Fuel;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.Fuels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace NewLoco.Service.Core.Services;
-
-public class FuelService : IFuelService
+namespace NewLoco.Service.Core.Services
     {
-    private readonly LocoDbContext context;
-
-    public FuelService(LocoDbContext context)
+    public class FuelService : IFuelService
         {
-        this.context = context;
-        }
+        private readonly LocoDbContext context;
 
-    public IEnumerable<FuelAllViewModel> GetAll()
-        {
-        return context.Fuels
-            .AsNoTracking()
-            .Include(f => f.Locomotive)
-            .Select(f => new FuelAllViewModel
-                {
-                Id = f.Id,
-                LocomotiveNumber = f.Locomotive.Number,
-                Date = f.Date,
-                InitialFuel = f.InitialFuel,
-                FinalFuel = f.FinalFuel,
-                Consumption = f.Consumption,
-                Refueled = f.Refueled,
-                Note = f.Note ?? "",
-                IsDeleted = f.IsDeleted,
-                CreatedOn = f.CreatedOn,
-                CreatedByUserName = f.CreatedBy,
-                EditedBy = f.ModifiedBy,
-                EditedOn = f.ModifiedOn
-                })
-            .ToList();
-        }
-
-    public CreateFuelViewModel CreateModel()
-        => new CreateFuelViewModel
+        public FuelService(LocoDbContext context)
             {
-            Date = DateTime.Now,
-            InitialFuel = 0
-            };
+            this.context = context;
+            }
 
-    public async Task CreateAsync(CreateFuelViewModel model, string user)
-        {
-        var fuel = new Fuel
+        public IEnumerable<FuelAllViewModel> GetAll()
             {
-            LocoId = model.LocomotiveId,
-            Date = model.Date ?? DateTime.Now,
-            InitialFuel = model.InitialFuel,
-            FinalFuel = model.FinalFuel,
-            Refueled = model.Refueled,
-            Note = model.Note ?? "",
-            CreatedBy = user,
-            CreatedOn = DateTime.Now,
-            Consumption = (model.InitialFuel + model.Refueled) - model.FinalFuel
-            };
+            return context.Fuels
+                .AsNoTracking()
+                .Include(f => f.Locomotive)
+                .Select(f => new FuelAllViewModel
+                    {
+                    Id = f.Id,
+                    LocomotiveNumber = f.Locomotive.Number,
+                    Date = f.Date,
+                    InitialFuel = f.InitialFuel,
+                    FinalFuel = f.FinalFuel,
+                    Consumption = f.Consumption,
+                    Refueled = f.Refueled,
+                    Note = f.Note ?? "",
+                    IsDeleted = f.IsDeleted,
+                    CreatedOn = f.CreatedOn,
+                    CreatedByUserName = f.CreatedBy,
+                    EditedBy = f.ModifiedBy,
+                    EditedOn = f.ModifiedOn
+                    })
+                .ToList();
+            }
 
-        context.Fuels.Add(fuel);
-        await context.SaveChangesAsync();
-        }
-
-    public FuelAllViewModel? GetForEdit(int id)
-        {
-        return context.Fuels
-            .Include(f => f.Locomotive)
-            .Where(f => f.Id == id)
-            .Select(f => new FuelAllViewModel
+        public CreateFuelViewModel CreateModel()
+            => new CreateFuelViewModel
                 {
-                Id = f.Id,
-                LocomotiveNumber = f.Locomotive.Number,
-                Date = f.Date,
-                InitialFuel = f.InitialFuel,
-                FinalFuel = f.FinalFuel,
-                Consumption = f.Consumption,
-                Refueled = f.Refueled,
-                Note = f.Note ?? ""
-                })
-            .FirstOrDefault();
-        }
+                Date = DateTime.Now,
+                InitialFuel = 0
+                };
 
-    public async Task EditAsync(int id, FuelAllViewModel model, string user)
-        {
-        var fuel = await context.Fuels.FindAsync(id);
-        if (fuel == null) return;
+        public async Task CreateAsync(CreateFuelViewModel model, string user)
+            {
+            var date = model.Date;
+            
+            var prevFinal = await context.Fuels
+                .AsNoTracking()
+                .Where(f => f.LocoId == model.LocomotiveId && !f.IsDeleted && f.Date < date)
+                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
+                .Select(f => (decimal?)f.FinalFuel)
+                .FirstOrDefaultAsync();
 
-        fuel.InitialFuel = model.InitialFuel;
-        fuel.FinalFuel = model.FinalFuel;
-        fuel.Refueled = model.Refueled;
-        fuel.Note = model.Note ?? "";
-        fuel.Consumption = (model.InitialFuel + model.Refueled) - model.FinalFuel;
-        fuel.ModifiedBy = user;
-        fuel.ModifiedOn = DateTime.Now;
+            var initial = prevFinal ?? 0m;
+            var consumption = (initial + model.Refueled) - model.FinalFuel;
 
-        await context.SaveChangesAsync();
-        }
+            var fuel = new Fuel
+                {
+                LocoId = model.LocomotiveId,
+                Date = date,
+                InitialFuel = initial,
+                FinalFuel = model.FinalFuel,
+                Refueled = model.Refueled,
+                Note = model.Note ?? string.Empty,
+                CreatedBy = user,
+                CreatedOn = DateTime.Now,
+                Consumption = consumption
+                };
+            
+            context.Fuels.Add(fuel);
+            await context.SaveChangesAsync();
+            }
 
-    public async Task DeleteAsync(int id, string user)
-        {
-        var fuel = await context.Fuels.FindAsync(id);
-        if (fuel == null) return;
+        public FuelAllViewModel? GetForEdit(int id)
+            {
+            return context.Fuels
+                .AsNoTracking()
+                .Include(f => f.Locomotive)
+                .Where(f => f.Id == id)
+                .Select(f => new FuelAllViewModel
+                    {
+                    Id = f.Id,
+                    LocomotiveNumber = f.Locomotive.Number,
+                    Date = f.Date,
+                    InitialFuel = f.InitialFuel,
+                    FinalFuel = f.FinalFuel,
+                    Consumption = f.Consumption,
+                    Refueled = f.Refueled,
+                    Note = f.Note ?? ""
+                    })
+                .FirstOrDefault();
+            }
 
-        fuel.IsDeleted = true;
-        fuel.ModifiedBy = user;
-        fuel.ModifiedOn = DateTime.Now;
+        public async Task EditAsync(int id, FuelAllViewModel model, string user)
+            {
+            var fuel = await context.Fuels.FindAsync(id);
+            if (fuel == null) return;
 
-        await context.SaveChangesAsync();
-        }
+            var date = model.Date;
 
-    public async Task UndoDeleteAsync(int id, string user)
-        {
-        var fuel = await context.Fuels.FindAsync(id);
-        if (fuel == null) return;
+            var prevFinal = await context.Fuels
+                .AsNoTracking()
+                .Where(f => f.LocoId == fuel.LocoId && !f.IsDeleted && f.Id != id && f.Date < date)
+                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
+                .Select(f => (decimal?)f.FinalFuel)
+                .FirstOrDefaultAsync();
 
-        fuel.IsDeleted = false;
-        fuel.ModifiedBy = user;
-        fuel.ModifiedOn = DateTime.Now;
+            fuel.Date = date;
 
-        await context.SaveChangesAsync();
-        }
+            if (prevFinal.HasValue)
+                fuel.InitialFuel = prevFinal.Value;   // има предходна смяна → взимаме нейното FinalFuel
+            // иначе: няма предходна смяна → запазваме текущото InitialFuel (не го нулираме)
 
-    public decimal GetLastFuel(int locomotiveId)
-        {
-        return context.Fuels
-            .Where(f => f.LocoId == locomotiveId)
-            .OrderByDescending(f => f.Date)
-            .Select(f => f.FinalFuel)
-            .FirstOrDefault();
+            fuel.FinalFuel = model.FinalFuel;
+            fuel.Refueled = model.Refueled;
+            fuel.Note = model.Note ?? string.Empty;
+            fuel.Consumption = (fuel.InitialFuel + fuel.Refueled) - fuel.FinalFuel;
+            fuel.ModifiedBy = user;
+            fuel.ModifiedOn = DateTime.Now;
+
+            await context.SaveChangesAsync();
+            }
+
+        public async Task DeleteAsync(int id, string user)
+            {
+            var fuel = await context.Fuels.FindAsync(id);
+            if (fuel == null) return;
+
+            fuel.IsDeleted = true;
+            fuel.ModifiedBy = user;
+            fuel.ModifiedOn = DateTime.Now;
+
+            await context.SaveChangesAsync();
+            }
+
+        public async Task UndoDeleteAsync(int id, string user)
+            {
+            var fuel = await context.Fuels.FindAsync(id);
+            if (fuel == null) return;
+
+            fuel.IsDeleted = false;
+            fuel.ModifiedBy = user;
+            fuel.ModifiedOn = DateTime.Now;
+
+            await context.SaveChangesAsync();
+            }
+
+        public decimal GetLastFuel(int locomotiveId)
+            {
+            return context.Fuels
+                .AsNoTracking()
+                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted)
+                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
+                .Select(f => f.FinalFuel)
+                .FirstOrDefault();
+            }
+
+        public async Task<decimal> GetPrevFinalAsync(int locomotiveId, DateTime date)
+            {
+            return await context.Fuels
+                .AsNoTracking()
+                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted && f.Date < date)
+                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
+                .Select(f => f.FinalFuel)
+                .FirstOrDefaultAsync();
+            }
         }
     }

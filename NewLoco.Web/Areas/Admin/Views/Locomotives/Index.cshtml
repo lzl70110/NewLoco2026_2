@@ -11,6 +11,7 @@
         new() { Text = "All",     Value = "all",     Selected = currentFilter == "all" },
         new() { Text = "Active",  Value = "active",  Selected = currentFilter == "active" },
         new() { Text = "Deleted", Value = "deleted", Selected = currentFilter == "deleted" }
+         
     };
 
     bool showUndelete = string.Equals(currentFilter, "deleted", StringComparison.OrdinalIgnoreCase);

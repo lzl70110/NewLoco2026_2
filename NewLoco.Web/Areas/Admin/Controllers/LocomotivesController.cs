@@ -13,7 +13,7 @@ namespace NewLoco.Web.Areas.Admin.Controllers
 
         public LocomotivesController(ILocomotiveService service)
             {
-            // Null-guard + assign to field
+            
             this.service = service ?? throw new ArgumentNullException(nameof(service));
             }
 
@@ -21,8 +21,20 @@ namespace NewLoco.Web.Areas.Admin.Controllers
         public async Task<IActionResult> Index(string? filter = "active")
             {
             var dtos = await service.GetAllAsync(filter);
-            var model = dtos.Select(ToVm).ToList(); // DTO -> VM
+            
+            var model = dtos.Select(static d => new LocomotiveNumberViewModel
+                {
+                Id = d.Id,
+                Number = d.Number,
+                LocomotiveType = d.LocomotiveType,
+                MeasuringUnit = d.MeasuringUnit,
+                Note = d.Note?? "",
+                IsDeleted = d.IsDeleted
+                }).ToList();
+
             ViewData["CurrentFilter"] = filter;
+            if (!ModelState.IsValid)
+                return NotFound();
             return View(model);
             }
 
@@ -140,7 +152,7 @@ namespace NewLoco.Web.Areas.Admin.Controllers
                 Note = dto.Note ?? string.Empty,
                 IsDeleted = dto.IsDeleted,
                 CreatedOn = dto.CreatedOn,
-                CreatedBy = dto.CreatedBy,
+                CreatedBy = dto.CreatedBy!,
                 ModifiedOn = dto.ModifiedOn,
                 ModifiedBy = dto.ModifiedBy
                 };

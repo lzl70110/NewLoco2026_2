@@ -12,8 +12,8 @@ using NewLoco.Data;
 namespace NewLoco.Data.Migrations
 {
     [DbContext(typeof(LocoDbContext))]
-    [Migration("20260214224841_AddFuel_Index_LocoDateShift")]
-    partial class AddFuel_Index_LocoDateShift
+    [Migration("20260215091901_SeedSamle")]
+    partial class SeedSamle
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -476,7 +476,7 @@ namespace NewLoco.Data.Migrations
                         {
                             Id = 1,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 139, DateTimeKind.Utc).AddTicks(8998),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5746),
                             IsDeleted = false,
                             LocomotiveType = 1,
                             MeasuringUnit = 1,
@@ -487,7 +487,7 @@ namespace NewLoco.Data.Migrations
                         {
                             Id = 2,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 139, DateTimeKind.Utc).AddTicks(9009),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5753),
                             IsDeleted = false,
                             LocomotiveType = 1,
                             MeasuringUnit = 2,
@@ -498,7 +498,7 @@ namespace NewLoco.Data.Migrations
                         {
                             Id = 3,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 139, DateTimeKind.Utc).AddTicks(9013),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5756),
                             IsDeleted = false,
                             LocomotiveType = 2,
                             MeasuringUnit = 2,
@@ -567,7 +567,7 @@ namespace NewLoco.Data.Migrations
                             Id = 1,
                             Amount = 5m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8327),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(605),
                             Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 105m,
                             InitialValue = 100m,
@@ -581,7 +581,7 @@ namespace NewLoco.Data.Migrations
                             Id = 2,
                             Amount = 5m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8337),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(611),
                             Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 110m,
                             InitialValue = 105m,
@@ -595,7 +595,7 @@ namespace NewLoco.Data.Migrations
                             Id = 3,
                             Amount = 5m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8342),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(615),
                             Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 115m,
                             InitialValue = 110m,
@@ -609,7 +609,7 @@ namespace NewLoco.Data.Migrations
                             Id = 4,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8346),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(619),
                             Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 5050m,
                             InitialValue = 5000m,
@@ -623,7 +623,7 @@ namespace NewLoco.Data.Migrations
                             Id = 5,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8350),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(622),
                             Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 5100m,
                             InitialValue = 5050m,
@@ -637,7 +637,7 @@ namespace NewLoco.Data.Migrations
                             Id = 6,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8354),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(625),
                             Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 5150m,
                             InitialValue = 5100m,
@@ -651,7 +651,7 @@ namespace NewLoco.Data.Migrations
                             Id = 7,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8357),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(628),
                             Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 10050m,
                             InitialValue = 10000m,
@@ -665,7 +665,7 @@ namespace NewLoco.Data.Migrations
                             Id = 8,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8362),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(632),
                             Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 10100m,
                             InitialValue = 10050m,
@@ -679,7 +679,7 @@ namespace NewLoco.Data.Migrations
                             Id = 9,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 14, 22, 48, 39, 140, DateTimeKind.Utc).AddTicks(8366),
+                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(635),
                             Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 10150m,
                             InitialValue = 10100m,

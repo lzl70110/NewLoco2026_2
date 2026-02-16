@@ -1,0 +1,177 @@
+﻿@{
+    ViewData["Title"] = "Calculator";
+    }
+
+<h2 class="h5 mb-3">Calculator</h2>
+
+<div class="card shadow-sm" style="max-width: 360px;">
+    <div class="card-body">
+        <!-- display -->
+        <input id="calcDisplay" class="form-control form-control-lg text-end mb-2"
+               type="text" value="0" readonly />
+        <!-- keypad -->
+        <div class="d-grid gap-2">
+            <div class="row g-2">
+                <div class="col-3"><button class="btn btn-outline-secondary w-100" data-op="C">C</button></div>
+                <div class="col-3"><button class="btn btn-outline-secondary w-100" data-op="CE">CE</button></div>
+                <div class="col-3"><button class="btn btn-outline-secondary w-100" data-op="BS">&larr;</button></div>
+                <div class="col-3"><button class="btn btn-outline-primary w-100" data-op="/">÷</button></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-3"><button class="btn btn-light w-100" data-num="7">7</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="8">8</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="9">9</button></div>
+                <div class="col-3"><button class="btn btn-outline-primary w-100" data-op="*">×</button></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-3"><button class="btn btn-light w-100" data-num="4">4</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="5">5</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="6">6</button></div>
+                <div class="col-3"><button class="btn btn-outline-primary w-100" data-op="-">−</button></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-3"><button class="btn btn-light w-100" data-num="1">1</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="2">2</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="3">3</button></div>
+                <div class="col-3"><button class="btn btn-outline-primary w-100" data-op="+">+</button></div>
+            </div>
+            <div class="row g-2">
+                <div class="col-3"><button class="btn btn-outline-secondary w-100" data-op="+/-">±</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-num="0">0</button></div>
+                <div class="col-3"><button class="btn btn-light w-100" data-dot=".">.</button></div>
+                <div class="col-3"><button class="btn btn-primary w-100" data-eq="=">=</button></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    @section Scripts {
+    <script>
+        /* Basic four-operator calculator with keyboard support */
+        (function () {
+            const display = document.getElementById('calcDisplay');
+
+            // calculator state
+            let a = null;           // first operand
+            let op = null;          // pending operator
+            let entering = true;    // are we typing a new number
+            let justEvaluated = false;
+
+            // helpers
+            function setDisplay(val) {
+                // limit length; keep commas/dots simple
+                const text = ('' + val);
+                display.value = text.length > 16 ? Number(val).toExponential(8) : text;
+            }
+
+            function getDisplayNumber() {
+                return Number(display.value.replace(',', '.'));
+            }
+
+            function clearAll() {
+                a = null; op = null; entering = true; justEvaluated = false;
+                setDisplay('0');
+            }
+
+            function clearEntry() {
+                entering = true;
+                setDisplay('0');
+            }
+
+            function backspace() {
+                if (!entering) return;
+                let t = display.value;
+                if (t.length <= 1 || (t.length === 2 && t.startsWith('-'))) setDisplay('0');
+                else setDisplay(t.slice(0, -1));
+            }
+
+            function inputDigit(d) {
+                if (justEvaluated) { op = null; justEvaluated = false; }
+                if (!entering || display.value === '0') {
+                    setDisplay(d);
+                    entering = true;
+                } else {
+                    setDisplay(display.value + d);
+                }
+            }
+
+            function inputDot() {
+                if (justEvaluated) { op = null; justEvaluated = false; }
+                if (!entering) { setDisplay('0.'); entering = true; return; }
+                if (!display.value.includes('.')) setDisplay(display.value + '.');
+            }
+
+            function toggleSign() {
+                if (display.value.startsWith('-')) setDisplay(display.value.slice(1));
+                else if (display.value !== '0') setDisplay('-' + display.value);
+            }
+
+            function applyOp(operator, x, y) {
+                switch (operator) {
+                    case '+': return x + y;
+                    case '-': return x - y;
+                    case '*': return x * y;
+                    case '/': return y === 0 ? NaN : x / y;
+                    default:  return y;
+                }
+            }
+
+            function setOperator(newOp) {
+                const x = getDisplayNumber();
+                if (a === null) {
+                    a = x;
+                } else if (op && entering) {
+                    a = applyOp(op, a, x);
+                    setDisplay(trimNum(a));
+                }
+                op = newOp;
+                entering = false;
+            }
+
+            function equals() {
+                const x = getDisplayNumber();
+                if (op === null && a === null) return;
+                if (op === null && a !== null) { setDisplay(trimNum(a)); return; }
+                const res = applyOp(op, a, x);
+                a = res; op = null; entering = false; justEvaluated = true;
+                setDisplay(trimNum(res));
+            }
+
+            function trimNum(n) {
+                if (!isFinite(n)) return 'Error';
+                // round to 12 significant digits then format plain
+                const rounded = Number.parseFloat(n.toPrecision(12));
+                return String(rounded);
+            }
+
+            // click handlers
+            document.querySelectorAll('[data-num]').forEach(btn =>
+                btn.addEventListener('click', e => inputDigit(e.currentTarget.dataset.num)));
+            document.querySelector('[data-dot="."]').addEventListener('click', inputDot);
+            document.querySelectorAll('[data-op]').forEach(btn =>
+                btn.addEventListener('click', e => {
+                    const o = e.currentTarget.dataset.op;
+                    if (o === 'C') return clearAll();
+                    if (o === 'CE') return clearEntry();
+                    if (o === 'BS') return backspace();
+                    if (o === '+/-') return toggleSign();
+                    setOperator(o);
+                }));
+            document.querySelector('[data-eq="="]').addEventListener('click', equals);
+
+            // keyboard support
+            document.addEventListener('keydown', (e) => {
+                if (e.key >= '0' && e.key <= '9') return inputDigit(e.key);
+                if (e.key === '.' || e.key === ',') return inputDot();
+                if (['+', '-', '*', '/'].includes(e.key)) return setOperator(e.key);
+                if (e.key === 'Enter' || e.key === '=') return equals();
+                if (e.key === 'Backspace') return backspace();
+                if (e.key.toLowerCase() === 'c') return clearAll();
+                if (e.key.toLowerCase() === 'e') return clearEntry();
+            });
+
+            // init
+            clearAll();
+        })();
+    </script>
+    }

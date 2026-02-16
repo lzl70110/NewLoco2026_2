@@ -62,6 +62,7 @@ namespace NewLoco.Web // препоръчително, вместо .Data
             // DI  
             builder.Services.AddScoped<IFuelService, FuelService>();
             builder.Services.AddScoped<ILocomotiveService, LocomotiveService>();
+            builder.Services.AddScoped<IShiftWorkService, ShiftWorkService>();
 
             var app = builder.Build();
 

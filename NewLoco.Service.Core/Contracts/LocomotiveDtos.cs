@@ -8,7 +8,8 @@ public record LocoNumberDto(
     string Number,
     LocomotiveType LocomotiveType,
     MeasuringUnits MeasuringUnit,
-    bool IsDeleted);
+    bool IsDeleted,
+    string? Note);
 
 // Details DTO (10 args)
 public record LocoDetailsDto(

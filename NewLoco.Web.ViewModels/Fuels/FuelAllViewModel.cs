@@ -2,7 +2,7 @@
 
 namespace NewLoco.Web.ViewModels.Fuels
     {
-    public class FuelAllViewModel : FuelsFullDetailsViewModel
+    public class FuelAllViewModel : FuelsBasicDetailsViewModel
         {
         public int Id { get; set; }
         public string LocomotiveNumber { get; set; } = null!;
@@ -11,7 +11,7 @@ namespace NewLoco.Web.ViewModels.Fuels
         public decimal FinalFuel { get; set; }
         public decimal Consumption { get; set; }
         public decimal Refueled { get; set; }
-        public string Note { get; set; } = string.Empty;
+        public string? Note { get; set; }  
         public bool IsDeleted { get; set; }= false;
         }
     }

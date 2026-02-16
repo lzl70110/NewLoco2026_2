@@ -1,6 +1,0 @@
-﻿  |-- Locomotive.cs
-  |-- LocoDbContext.cs
-      |-- Controllers
-  |-- Controllers
-  |-- Program.cs
-|-- NewLoco2026_2.sln

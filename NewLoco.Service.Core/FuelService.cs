@@ -47,28 +47,27 @@ namespace NewLoco.Service.Core.Services
         public CreateFuelViewModel CreateModel()
             => new CreateFuelViewModel
                 {
-                Date = DateTime.Now,
+                Date = DateTime.Today,
                 InitialFuel = 0
                 };
 
         public async Task CreateAsync(CreateFuelViewModel model, string user)
             {
-            var date = model.Date;
-            
-            var prevFinal = await context.Fuels
-                .AsNoTracking()
-                .Where(f => f.LocoId == model.LocomotiveId && !f.IsDeleted && f.Date < date)
-                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
-                .Select(f => (decimal?)f.FinalFuel)
-                .FirstOrDefaultAsync();
+            if (model.Date.Date > DateTime.Today)
+                throw new InvalidOperationException("Fuel entry cannot be in the future.");
 
-            var initial = prevFinal ?? 0m;
+            var prevFinal = await GetPrevFinalAsync(model.LocomotiveId, model.Date);
+            var initial = prevFinal;
+
+            if (model.FinalFuel > initial + model.Refueled)
+                throw new InvalidOperationException("Cannot set final fuel higher than available fuel.");
+
             var consumption = (initial + model.Refueled) - model.FinalFuel;
 
             var fuel = new Fuel
                 {
                 LocoId = model.LocomotiveId,
-                Date = date,
+                Date = model.Date,
                 InitialFuel = initial,
                 FinalFuel = model.FinalFuel,
                 Refueled = model.Refueled,
@@ -77,7 +76,7 @@ namespace NewLoco.Service.Core.Services
                 CreatedOn = DateTime.Now,
                 Consumption = consumption
                 };
-            
+
             context.Fuels.Add(fuel);
             await context.SaveChangesAsync();
             }
@@ -104,24 +103,19 @@ namespace NewLoco.Service.Core.Services
 
         public async Task EditAsync(int id, FuelAllViewModel model, string user)
             {
+            if (model.Date.Date > DateTime.Today)
+                throw new InvalidOperationException("Fuel entry cannot be in the future.");
+
             var fuel = await context.Fuels.FindAsync(id);
             if (fuel == null) return;
 
-            var date = model.Date;
+            var prevFinal = await GetPrevFinalAsync(fuel.LocoId, model.Date);
+            fuel.InitialFuel = prevFinal;
 
-            var prevFinal = await context.Fuels
-                .AsNoTracking()
-                .Where(f => f.LocoId == fuel.LocoId && !f.IsDeleted && f.Id != id && f.Date < date)
-                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
-                .Select(f => (decimal?)f.FinalFuel)
-                .FirstOrDefaultAsync();
+            if (model.FinalFuel > fuel.InitialFuel + model.Refueled)
+                throw new InvalidOperationException("Cannot set final fuel higher than available fuel.");
 
-            fuel.Date = date;
-
-            if (prevFinal.HasValue)
-                fuel.InitialFuel = prevFinal.Value;   // има предходна смяна → взимаме нейното FinalFuel
-            // иначе: няма предходна смяна → запазваме текущото InitialFuel (не го нулираме)
-
+            fuel.Date = model.Date;
             fuel.FinalFuel = model.FinalFuel;
             fuel.Refueled = model.Refueled;
             fuel.Note = model.Note ?? string.Empty;
@@ -174,6 +168,32 @@ namespace NewLoco.Service.Core.Services
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
                 .FirstOrDefaultAsync();
+            }
+
+        // Consume fuel for work: cannot consume more than available
+        public async Task ConsumeFuelAsync(int locomotiveId, decimal amount, string user)
+            {
+            if (amount <= 0) return;
+
+            var lastFuel = await context.Fuels
+                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted)
+                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
+                .FirstOrDefaultAsync();
+
+            if (lastFuel == null)
+                throw new InvalidOperationException("No fuel record exists for this locomotive.");
+
+            var available = lastFuel.FinalFuel;
+
+            if (amount > available)
+                throw new InvalidOperationException("Not enough fuel to perform the work.");
+
+            lastFuel.FinalFuel -= amount;
+            lastFuel.Consumption += amount;
+            lastFuel.ModifiedBy = user;
+            lastFuel.ModifiedOn = DateTime.Now;
+
+            await context.SaveChangesAsync();
             }
         }
     }

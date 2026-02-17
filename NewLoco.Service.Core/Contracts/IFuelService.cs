@@ -12,7 +12,7 @@ namespace NewLoco.Service.Core.Contracts
         CreateFuelViewModel CreateModel();
 
         Task CreateAsync(CreateFuelViewModel model, string user);
-
+        Task ConsumeFuelAsync(int locomotiveId, decimal amount, string user);
         FuelAllViewModel? GetForEdit(int id);
 
         Task EditAsync(int id, FuelAllViewModel model, string user);

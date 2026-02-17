@@ -22,7 +22,8 @@
 
         <div class="mb-2">
             <label asp-for="Date" class="form-label"></label>
-            <input asp-for="Date" class="form-control" type="date" asp-format="{0:yyyy-MM-dd}" />
+            <input asp-for="Date"  class="form-control"
+                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
             <span asp-validation-for="Date" class="text-danger"></span>
         </div>
 

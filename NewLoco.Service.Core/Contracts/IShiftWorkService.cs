@@ -8,10 +8,12 @@ namespace NewLoco.Service.Core.Contracts
     {
     public interface IShiftWorkService
         {
+
         IEnumerable<ShiftWorksViewModel> GetAll();
 
         CreateShiftWorkViewModel CreateModel();
 
+        Task<ShiftWorkDto?> GetLastShiftAsync(int locomotiveId);
         Task CreateAsync(CreateShiftWorkViewModel model, string user);
 
         EditShiftWorkViewModel? GetForEdit(int id);

@@ -6,39 +6,27 @@ using static NewLoco.GCommon.EntityValidationConstants.BaseEntity;
 
 namespace NewLoco.Web.ViewModels.ShiftWorks
     {
-    public class EditShiftWorkViewModel
+    public class EditShiftWorkViewModel : ShiftWorksViewModelBase
         {
-        [Required]
         public int Id { get; set; }
 
-        [Required]
-        public int LocomotiveId { get; set; }
+        // decimal вместо int
+        public decimal StartValue
+            {
+            get => InitialValue;
+            set => InitialValue = value;
+            }
 
-       
-        public string LocomotiveNumber { get; set; } = string.Empty;
+        public decimal EndValue
+            {
+            get => FinalValue;
+            set => FinalValue = value;
+            }
 
-        [Required]
-        [DataType(DataType.Date)]
-        public DateTime Date { get; set; }
-
-        [Required]
-        public Shift Shift { get; set; }
-
-        [Required]
-        [Range(ValueMin, ValueMax)]
-        public decimal InitialValue { get; set; }
-
-        [Required]
-        [Range(ValueMin, ValueMax)]
-        public decimal FinalValue { get; set; }
-
-        [Required]
-        [Range(ValueMin, ValueMax)]
-        public decimal Amount { get; set; }
-
-        public string? OperatorName { get; set; }
-
-        [StringLength(NoteMaxLength,MinimumLength =NoteMinLength)]
-        public string? Note { get; set; }
+        // Display-only, не се присвоява
+        public string Locomotive
+            {
+            get => Locomotives.FirstOrDefault(l => l.Value == LocomotiveId.ToString())?.Text ?? "";
+            }
         }
     }

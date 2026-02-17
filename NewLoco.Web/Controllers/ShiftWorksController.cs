@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.Extensions.Logging;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.ShiftWorks;
-using System;
 
 namespace NewLoco.Web.Controllers
     {
@@ -25,24 +23,47 @@ namespace NewLoco.Web.Controllers
             this.logger = logger ?? throw new ArgumentNullException(nameof(logger));
             }
 
-        private async Task PopulateLocomotivesAsync()
+        // ---------- Helper: populate dropdown ----------
+        private async Task PopulateLocomotivesAsync(ShiftWorksViewModelBase model)
             {
             var options = await locoService.GetOptionsAsync();
-            ViewBag.Locomotives = options
-                .Select(o => new SelectListItem { Value = o.Id.ToString(), Text = o.Number })
+            model.Locomotives = options
+                .Select(o => new SelectListItem
+                    {
+                    Value = o.Id.ToString(),
+                    Text = o.Number,
+                    Selected = model.LocomotiveId == o.Id
+                    })
                 .ToList();
             }
 
+        // ---------- INDEX ----------
         public IActionResult Index()
             {
             var vm = shiftService.GetAll();
             return View(vm);
             }
 
+        // ---------- CREATE ----------
         public async Task<IActionResult> Create()
             {
-            await PopulateLocomotivesAsync();
-            return View(shiftService.CreateModel());
+            var vm = shiftService.CreateModel();
+            vm.Date = DateTime.Today;
+
+            await PopulateLocomotivesAsync(vm);
+
+            // Ако е избран локомотив, вземи последната смяна
+            if (vm.LocomotiveId != 0)
+                {
+                var lastShift = await shiftService.GetLastShiftAsync(vm.LocomotiveId);
+                if (lastShift != null)
+                    {
+                    vm.InitialValue = lastShift.FinalValue;
+                    vm.InitialValueDate = lastShift.Date;
+                    }
+                }
+
+            return View(vm);
             }
 
         [HttpPost]
@@ -51,11 +72,13 @@ namespace NewLoco.Web.Controllers
             {
             if (!ModelState.IsValid)
                 {
-                await PopulateLocomotivesAsync();
+                await PopulateLocomotivesAsync(model);
                 return View(model);
                 }
 
             var user = User?.Identity?.Name ?? "system";
+            model.Date = model.Date == default ? DateTime.Today : model.Date;
+
             try
                 {
                 await shiftService.CreateAsync(model, user);
@@ -65,22 +88,25 @@ namespace NewLoco.Web.Controllers
             catch (InvalidOperationException ex)
                 {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await PopulateLocomotivesAsync();
+                await PopulateLocomotivesAsync(model);
                 return View(model);
                 }
             catch (Exception ex)
                 {
                 logger.LogError(ex, "Create ShiftWork failed");
                 TempData["Error"] = "Failed to create shift work.";
-                await PopulateLocomotivesAsync();
+                await PopulateLocomotivesAsync(model);
                 return View(model);
                 }
             }
 
-        public IActionResult Edit(int id)
+        // ---------- EDIT ----------
+        public async Task<IActionResult> Edit(int id)
             {
             var vm = shiftService.GetForEdit(id);
             if (vm == null) return NotFound();
+
+            await PopulateLocomotivesAsync(vm);
             return View(vm);
             }
 
@@ -90,9 +116,14 @@ namespace NewLoco.Web.Controllers
             {
             if (id != model.Id) return BadRequest();
 
-            if (!ModelState.IsValid) return View(model);
+            if (!ModelState.IsValid)
+                {
+                await PopulateLocomotivesAsync(model);
+                return View(model);
+                }
 
             var user = User?.Identity?.Name ?? "system";
+
             try
                 {
                 await shiftService.EditAsync(id, model, user);
@@ -102,21 +133,25 @@ namespace NewLoco.Web.Controllers
             catch (InvalidOperationException ex)
                 {
                 ModelState.AddModelError(string.Empty, ex.Message);
+                await PopulateLocomotivesAsync(model);
                 return View(model);
                 }
             catch (Exception ex)
                 {
                 logger.LogError(ex, "Edit ShiftWork failed for id {Id}", id);
                 TempData["Error"] = "Failed to update shift work.";
+                await PopulateLocomotivesAsync(model);
                 return View(model);
                 }
             }
 
+        // ---------- DELETE ----------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
             {
             var user = User?.Identity?.Name ?? "system";
+
             try
                 {
                 await shiftService.DeleteAsync(id, user);
@@ -127,14 +162,17 @@ namespace NewLoco.Web.Controllers
                 logger.LogError(ex, "Delete ShiftWork failed for id {Id}", id);
                 TempData["Error"] = "Failed to delete shift work.";
                 }
+
             return RedirectToAction(nameof(Index));
             }
 
+        // ---------- UNDO DELETE ----------
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UndoDelete(int id)
             {
             var user = User?.Identity?.Name ?? "system";
+
             try
                 {
                 await shiftService.UndoDeleteAsync(id, user);
@@ -145,6 +183,7 @@ namespace NewLoco.Web.Controllers
                 logger.LogError(ex, "Undo delete ShiftWork failed for id {Id}", id);
                 TempData["Error"] = "Failed to restore shift work.";
                 }
+
             return RedirectToAction(nameof(Index));
             }
         }

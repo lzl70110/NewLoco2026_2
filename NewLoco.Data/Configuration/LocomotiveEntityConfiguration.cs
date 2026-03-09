@@ -13,21 +13,17 @@ namespace NewLoco.Data.Configurations
 
             builder.ToTable("Locomotives");
 
-
             builder.HasKey(l => l.Id);
-
 
             builder.Property(l => l.Number)
                 .IsRequired()
                 .HasMaxLength(LocomotiveNumberLength);
-
 
             builder.HasIndex(l => l.Number).IsUnique();
 
             builder.Property(l => l.LocomotiveType)
                 .HasConversion<int>()
                 .IsRequired();
-
 
             builder.Property(l => l.MeasuringUnit)
                 .HasConversion<int>()
@@ -74,6 +70,5 @@ namespace NewLoco.Data.Configurations
 );
 
             }
-
         }
     }

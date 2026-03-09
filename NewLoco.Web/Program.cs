@@ -6,7 +6,7 @@ using NewLoco.Service.Core.Contracts;
 using NewLoco.Service.Core.Services;
  
 
-namespace NewLoco.Web // препоръчително, вместо .Data
+namespace NewLoco.Web 
     {
     public class Program
         {

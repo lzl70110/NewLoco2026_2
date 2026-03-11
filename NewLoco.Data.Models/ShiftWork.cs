@@ -16,7 +16,6 @@ public class ShiftWork : BaseEntity
     [Required]
     public Locomotive Locomotive { get; set; } = null!;
 
-
     public DateTime Date { get; set; }
 
     public Shift Shift { get; set; } = Shift.Day;

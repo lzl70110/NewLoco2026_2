@@ -15,7 +15,6 @@ namespace NewLoco.Service.Core.Services
         {
         private readonly LocoDbContext context;
         private readonly IFuelService fuelService;
-
         private const decimal MinFuel = 100m;
 
         public ShiftWorkService(LocoDbContext context, IFuelService fuelService)

@@ -2,7 +2,7 @@
 
 namespace NewLoco.Web.ViewModels.Fuels
     {
-    public class FuelsBasicDetailsViewModel
+    public class FuelsBasicDetailsViewModel 
         {
         public DateTime CreatedOn { get; set; }
         public string CreatedByUserName { get; set; } = null!;

@@ -4,7 +4,7 @@ using static NewLoco.GCommon.EntityValidationConstants.Fuel;
 
 namespace NewLoco.Web.ViewModels.Fuels
     {
-    public class CreateFuelViewModel
+    public class CreateFuelViewModel : FuelsBasicDetailsViewModel
         {
         [Required]
         public int LocomotiveId { get; set; }
@@ -13,7 +13,6 @@ namespace NewLoco.Web.ViewModels.Fuels
         [DataType(DataType.Date)]
         public DateTime Date { get; set; }
 
-         
         public decimal InitialFuel { get; set; }
 
         [Required]
@@ -23,7 +22,6 @@ namespace NewLoco.Web.ViewModels.Fuels
         [Range(ValueMin, ValueMax)]
         public decimal Refueled { get; set; }
 
-         
         public decimal Consumption { get; set; }
 
         [StringLength(NoteMaxLength, MinimumLength = 5)]

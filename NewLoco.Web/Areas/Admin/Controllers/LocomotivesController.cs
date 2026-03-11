@@ -136,7 +136,7 @@ namespace NewLoco.Web.Areas.Admin.Controllers
                 {
                 Id = dto.Id,
                 Number = dto.Number,
-                LocomotiveType = dto.LocomotiveType,   // enum -> enum (see note below if your VM uses string)
+                LocomotiveType = dto.LocomotiveType,   // enum -> enum 
                 MeasuringUnit = dto.MeasuringUnit,    // enum -> enum
                 IsDeleted = dto.IsDeleted
                 };

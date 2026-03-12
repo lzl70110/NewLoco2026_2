@@ -5,7 +5,7 @@
     ViewData["Title"] = "Edit Locomotive";
     var currentFilter = (ViewData["CurrentFilter"] as string) ?? "active";
     var id = (int?)ViewData["EntityId"] ?? 0;
-    }
+}
 
 <h2 class="mb-3">Edit Locomotive</h2>
 
@@ -14,7 +14,9 @@
       asp-action="Edit"
       asp-route-id="@id"
       asp-route-filter="@currentFilter"
-      method="post" class="needs-validation" novalidate>
+      method="post"
+      class="needs-validation"
+      novalidate>
     @Html.AntiForgeryToken()
 
     <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
@@ -27,7 +29,8 @@
 
     <div class="mb-3">
         <label asp-for="LocomotiveType" class="form-label"></label>
-        <select asp-for="LocomotiveType" class="form-select"
+        <select asp-for="LocomotiveType"
+                class="form-select"
                 asp-items="Html.GetEnumSelectList<LocomotiveType>()">
         </select>
         <span asp-validation-for="LocomotiveType" class="text-danger"></span>
@@ -35,7 +38,8 @@
 
     <div class="mb-3">
         <label asp-for="MeasuringUnit" class="form-label"></label>
-        <select asp-for="MeasuringUnit" class="form-select"
+        <select asp-for="MeasuringUnit"
+                class="form-select"
                 asp-items="Html.GetEnumSelectList<MeasuringUnits>()">
         </select>
         <span asp-validation-for="MeasuringUnit" class="text-danger"></span>
@@ -56,6 +60,6 @@
        class="btn btn-secondary ms-2">Cancel</a>
 </form>
 
-    @section Scripts {
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    }
+}

@@ -1,12 +1,18 @@
 ﻿using System;
 
 namespace NewLoco.Web.ViewModels.Fuels
+{
+    public class FuelsBasicDetailsViewModel
     {
-    public class FuelsBasicDetailsViewModel 
-        {
-        public DateTime CreatedOn { get; set; }
-        public string CreatedByUserName { get; set; } = null!;
-        public string? EditedBy { get; set; }
-        public DateTime? EditedOn { get; set; }
-        }
+        public int Id { get; set; }
+
+        // used for links to locomotive details
+        public int LocomotiveId { get; set; }
+
+        public string LocomotiveNumber { get; set; } = null!;
+        public DateTime Date { get; set; }
+        public decimal InitialFuel { get; set; }
+        public decimal FinalFuel { get; set; }
+        public bool IsDeleted { get; set; }
     }
+}

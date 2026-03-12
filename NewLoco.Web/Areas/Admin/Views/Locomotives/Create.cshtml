@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Create Locomotive";
     var currentFilter = (ViewData["CurrentFilter"] as string) ?? "active";
-    }
+}
 
 <h2 class="mb-3">Create Locomotive</h2>
 
@@ -12,20 +12,26 @@
       asp-controller="Locomotives"
       asp-action="Create"
       asp-route-filter="@currentFilter"
-      method="post" class="needs-validation" novalidate>
+      method="post"
+      class="needs-validation"
+      novalidate>
     @Html.AntiForgeryToken()
 
     <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
 
     <div class="mb-3">
         <label asp-for="Number" class="form-label"></label>
-        <input asp-for="Number" class="form-control" />
+        <input asp-for="Number"
+               class="form-control"
+               inputmode="numeric"
+               placeholder="55-123" />
         <span asp-validation-for="Number" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="LocomotiveType" class="form-label"></label>
-        <select asp-for="LocomotiveType" class="form-select"
+        <select asp-for="LocomotiveType"
+                class="form-select"
                 asp-items="Html.GetEnumSelectList<LocomotiveType>()">
         </select>
         <span asp-validation-for="LocomotiveType" class="text-danger"></span>
@@ -33,7 +39,8 @@
 
     <div class="mb-3">
         <label asp-for="MeasuringUnit" class="form-label"></label>
-        <select asp-for="MeasuringUnit" class="form-select"
+        <select asp-for="MeasuringUnit"
+                class="form-select"
                 asp-items="Html.GetEnumSelectList<MeasuringUnits>()">
         </select>
         <span asp-validation-for="MeasuringUnit" class="text-danger"></span>
@@ -54,6 +61,6 @@
        class="btn btn-secondary ms-2">Cancel</a>
 </form>
 
-    @section Scripts {
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    }
+}

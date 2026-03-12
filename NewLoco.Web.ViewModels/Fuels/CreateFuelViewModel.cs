@@ -7,17 +7,17 @@ namespace NewLoco.Web.ViewModels.Fuels
     public class CreateFuelViewModel : FuelsBasicDetailsViewModel
         {
         [Required]
-        public int LocomotiveId { get; set; }
+        public new int LocomotiveId { get; set; }
 
         [Required]
         [DataType(DataType.Date)]
-        public DateTime Date { get; set; }
+        public new DateTime Date { get; set; }
 
-        public decimal InitialFuel { get; set; }
+        public new decimal InitialFuel { get; set; }
 
         [Required]
         [Range(ValueMin, ValueMax)]
-        public decimal FinalFuel { get; set; }
+        public new decimal FinalFuel { get; set; }
 
         [Range(ValueMin, ValueMax)]
         public decimal Refueled { get; set; }

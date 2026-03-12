@@ -1,8 +1,9 @@
 ﻿@model NewLoco.Web.ViewModels.Fuels.CreateFuelViewModel
 @using Microsoft.AspNetCore.Mvc.Rendering
+
 @{
     ViewData["Title"] = "New Fuel Input";
-    }
+}
 <style>
     .create-narrow {
         max-width: 480px;
@@ -45,20 +46,20 @@
 
         <div class="mb-2">
             <label asp-for="LocomotiveId" class="form-label">Locomotive</label>
-                @{
+            @{
                 var locoList = ViewBag.Locomotives as IEnumerable<SelectListItem>;
-                }
+            }
             @if (locoList != null && locoList.Any())
-                {
+            {
                 <select asp-for="LocomotiveId" class="form-select" asp-items="locoList" id="LocomotiveId">
                     <option value="" disabled selected>-- choose --</option>
                 </select>
-                }
+            }
             else
-                {
+            {
                 <div class="alert alert-warning py-1">No locomotives to choose from.</div>
                 <input asp-for="LocomotiveId" type="number" class="form-control" id="LocomotiveId" />
-                }
+            }
             <span asp-validation-for="LocomotiveId" class="text-danger"></span>
         </div>
 
@@ -67,10 +68,10 @@
             <input asp-for="Date" type="date" class="form-control"
                    min="@DateTime.Today.AddDays(-10).ToString("yyyy-MM-dd")"
                    max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-
             <span asp-validation-for="Date" class="text-danger"></span>
         </div>
 
+        <!-- keep invariant to avoid culture parsing issues -->
         <input type="hidden" name="__Invariant" value="Date,FinalFuel,Refueled,InitialFuel" />
 
         <div class="row g-2">
@@ -107,12 +108,13 @@
 
         <div class="d-flex gap-2 mt-2">
             <button type="submit" class="btn btn-primary btn-sm">Save</button>
-            <a asp-action="FuelReport" class="btn btn-outline-secondary btn-sm">Cancel</a>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Cancel</a>
         </div>
     </form>
 </div>
 
-    @section Scripts {
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         function toNumber(val){ if(val===undefined||val===null) return 0; if(typeof val!=='string') val=String(val); val=val.replace(',', '.').trim(); var num=parseFloat(val); return isNaN(num)?0:num; }
         function fmt(x){ return (Math.round(x*100)/100).toFixed(2); }
@@ -156,4 +158,4 @@
             updateConsumption();
         });
     </script>
-    }
+}

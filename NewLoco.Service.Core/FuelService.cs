@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NewLoco.Data;
-using NewLoco.Data.Models;
 using NewLoco.Data.Models.Fuel;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.Fuels;
@@ -12,23 +11,19 @@ using static GCommon.Messages;
 
 namespace NewLoco.Service.Core.Services
 {
-    public class FuelService : IFuelService
+    public class FuelService(LocoDbContext context) : IFuelService
     {
-        private readonly LocoDbContext context;
-
-        public FuelService(LocoDbContext context)
-        {
-            this.context = context;
-        }
+        private readonly LocoDbContext context = context;
 
         public IEnumerable<FuelAllViewModel> GetAll()
         {
-            return context.Fuels
+            return [.. context.Fuels
                 .AsNoTracking()
                 .Include(f => f.Locomotive)
                 .Select(f => new FuelAllViewModel
                 {
                     Id = f.Id,
+                    LocomotiveId = f.LocoId,                 // map FK (LocoId) -> VM
                     LocomotiveNumber = f.Locomotive.Number,
                     Date = f.Date,
                     InitialFuel = f.InitialFuel,
@@ -41,12 +36,48 @@ namespace NewLoco.Service.Core.Services
                     CreatedByUserName = f.CreatedBy,
                     EditedBy = f.ModifiedBy,
                     EditedOn = f.ModifiedOn
-                })
-                .ToList();
+                })];
         }
 
+        // slim dataset for Fuels/Index
+        public IEnumerable<FuelsBasicDetailsViewModel> GetForIndexLatest()
+        {
+            // 1) get latest fuel IDs per Loco (server-side)
+            var latestIds = context.Fuels
+                .AsNoTracking()
+                .Where(f => !f.IsDeleted)
+                .GroupBy(f => f.LocoId)
+                .Select(g => g
+                    .OrderByDescending(x => x.Date)
+                    .ThenByDescending(x => x.Id)
+                    .Select(x => x.Id)
+                    .FirstOrDefault())
+                .ToList(); // executes single SQL, returns list of ids
+
+            if (latestIds.Count == 0)
+                return new List<FuelsBasicDetailsViewModel>();
+
+            // 2) load those fuels + project to the slim VM
+            var result = context.Fuels
+                .AsNoTracking()
+                .Where(f => latestIds.Contains(f.Id))
+                .Select(f => new FuelsBasicDetailsViewModel
+                {
+                    Id = f.Id,
+                    LocomotiveId = f.LocoId,
+                    LocomotiveNumber = f.Locomotive.Number, // navigation used only here
+                    Date = f.Date,
+                    InitialFuel = f.InitialFuel,
+                    FinalFuel = f.FinalFuel,
+                    IsDeleted = f.IsDeleted
+                })
+                .OrderBy(x => x.LocomotiveNumber)
+                .ToList();
+
+            return result;
+        }
         public CreateFuelViewModel CreateModel()
-            => new CreateFuelViewModel
+            => new()
             {
                 Date = DateTime.Today,
                 InitialFuel = 0
@@ -55,20 +86,18 @@ namespace NewLoco.Service.Core.Services
         public async Task CreateAsync(CreateFuelViewModel model, string user)
         {
             if (model.Date.Date > DateTime.Today)
-                throw new InvalidOperationException(FuelServiceKeys.Msg_FuelInFuture); // replaced literal with key
+                throw new InvalidOperationException(FuelServiceKeys.Msg_FuelInFuture);
 
             var prevFinal = await GetPrevFinalAsync(model.LocomotiveId, model.Date);
             var initial = prevFinal;
 
             if (model.FinalFuel > initial + model.Refueled)
-                throw new InvalidOperationException(FuelServiceKeys.Msg_FinalFuelTooHigh); // replaced literal with key
-
-            var consumption = (initial + model.Refueled) - model.FinalFuel;
+                throw new InvalidOperationException(FuelServiceKeys.Msg_FinalFuelTooHigh);
 
             var fuel = new Fuel
             {
-                // NOTE: Using LocomotiveId (matches model Fuel)
-                Id = model.LocomotiveId,
+                // set FK, do not touch PK
+                LocoId = model.LocomotiveId,
                 Date = model.Date,
                 InitialFuel = initial,
                 FinalFuel = model.FinalFuel,
@@ -76,7 +105,8 @@ namespace NewLoco.Service.Core.Services
                 Note = model.Note ?? string.Empty,
                 CreatedBy = user,
                 CreatedOn = DateTime.Now,
-                Consumption = consumption
+                Consumption = (initial + model.Refueled) - model.FinalFuel,
+                IsDeleted = false
             };
 
             context.Fuels.Add(fuel);
@@ -92,13 +122,19 @@ namespace NewLoco.Service.Core.Services
                 .Select(f => new FuelAllViewModel
                 {
                     Id = f.Id,
+                    LocomotiveId = f.LocoId,
                     LocomotiveNumber = f.Locomotive.Number,
                     Date = f.Date,
                     InitialFuel = f.InitialFuel,
                     FinalFuel = f.FinalFuel,
                     Consumption = f.Consumption,
                     Refueled = f.Refueled,
-                    Note = f.Note ?? string.Empty
+                    Note = f.Note ?? string.Empty,
+                    IsDeleted = f.IsDeleted,
+                    CreatedOn = f.CreatedOn,
+                    CreatedByUserName = f.CreatedBy,
+                    EditedBy = f.ModifiedBy,
+                    EditedOn = f.ModifiedOn
                 })
                 .FirstOrDefault();
         }
@@ -106,16 +142,17 @@ namespace NewLoco.Service.Core.Services
         public async Task EditAsync(int id, FuelAllViewModel model, string user)
         {
             if (model.Date.Date > DateTime.Today)
-                throw new InvalidOperationException(FuelServiceKeys.Msg_FuelInFuture);  
+                throw new InvalidOperationException(FuelServiceKeys.Msg_FuelInFuture);
 
             var fuel = await context.Fuels.FindAsync(id);
             if (fuel == null) return;
 
-            var prevFinal = await GetPrevFinalAsync(fuel.Id, model.Date);  
+            // recompute initial based on previous final for same locomotive and earlier date
+            var prevFinal = await GetPrevFinalAsync(fuel.LocoId, model.Date);
             fuel.InitialFuel = prevFinal;
 
             if (model.FinalFuel > fuel.InitialFuel + model.Refueled)
-                throw new InvalidOperationException(FuelServiceKeys.Msg_FinalFuelTooHigh);  
+                throw new InvalidOperationException(FuelServiceKeys.Msg_FinalFuelTooHigh);
 
             fuel.Date = model.Date;
             fuel.FinalFuel = model.FinalFuel;
@@ -156,7 +193,7 @@ namespace NewLoco.Service.Core.Services
         {
             return context.Fuels
                 .AsNoTracking()
-                .Where(f => f.Id == locomotiveId && !f.IsDeleted)  
+                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted) // FIX
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
                 .FirstOrDefault();
@@ -166,28 +203,24 @@ namespace NewLoco.Service.Core.Services
         {
             return await context.Fuels
                 .AsNoTracking()
-                .Where(f => f.Id == locomotiveId && !f.IsDeleted && f.Date < date) 
+                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted && f.Date < date) // FIX
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
                 .FirstOrDefaultAsync();
         }
 
-        // Consume fuel for work: cannot consume more than available
+        // consume from the latest record for the locomotive
         public async Task ConsumeFuelAsync(int locomotiveId, decimal amount, string user)
         {
             if (amount <= 0) return;
 
             var lastFuel = await context.Fuels
-                .Where(f => f.Id == locomotiveId && !f.IsDeleted)  
+                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted) // FIX
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
-                .FirstOrDefaultAsync();
-
-            if (lastFuel == null)
-                throw new InvalidOperationException(FuelServiceKeys.Msg_NoFuelRecordForLoco);  
+                .FirstOrDefaultAsync() ?? throw new InvalidOperationException(FuelServiceKeys.Msg_NoFuelRecordForLoco);
             var available = lastFuel.FinalFuel;
-
             if (amount > available)
-                throw new InvalidOperationException(FuelServiceKeys.Msg_NotEnoughFuel);  
+                throw new InvalidOperationException(FuelServiceKeys.Msg_NotEnoughFuel);
 
             lastFuel.FinalFuel -= amount;
             lastFuel.Consumption += amount;

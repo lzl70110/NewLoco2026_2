@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Delete Fuel Record";
-    }
+}
 
 <h2>Delete Fuel Record - @Model.LocomotiveNumber (@Model.Date.ToString("dd.MM.yyyy"))</h2>
 
@@ -15,12 +15,11 @@
     <tr><th>Final Fuel</th><td>@Model.FinalFuel</td></tr>
     <tr><th>Consumption</th><td>@Model.Consumption</td></tr>
     <tr><th>Refueled</th><td>@Model.Refueled</td></tr>
-    <tr><th>Note</th><td>@Model.Note</td></tr>
+    <tr><th>Note</th><td>@(string.IsNullOrWhiteSpace(Model.Note) ? "-" : Model.Note)</td></tr>
 </table>
 
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="Id" />
     <button type="submit" class="btn btn-danger">Delete</button>
-    <a asp-action="FuelReport" class="btn btn-secondary">Cancel</a>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 </form>

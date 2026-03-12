@@ -16,12 +16,12 @@
     // Admin section considered open on these controllers
     bool isAdminSection =
         currentController.Equals("Locomotives", StringComparison.OrdinalIgnoreCase) ||
-        currentController.Equals("PublicLocomotives", StringComparison.OrdinalIgnoreCase) ||
+        currentController.Equals("PublicLocomotives", StringComparison.OrdinalIgnoreCase) || // keep per your current logic
         currentController.Equals("Calendar", StringComparison.OrdinalIgnoreCase) ||
         currentController.Equals("Calculator", StringComparison.OrdinalIgnoreCase);
 
     bool adminOpen = isAdminSection; // keep Admin submenu expanded on Admin pages
-    }
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -64,7 +64,7 @@
             <span class="text-white me-3">@userName</span>
 
             @if (SignInManager.IsSignedIn(User))
-                {
+            {
                 <!-- Logout to Identity Razor Page -->
                 <form method="post"
                       asp-area="Identity"
@@ -73,12 +73,12 @@
                       class="m-0">
                     <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
                 </form>
-                }
+            }
             else
-                {
+            {
                 <a asp-area="Identity" asp-page="/Account/Login"
                    class="btn btn-sm btn-outline-light">Login</a>
-                }
+            }
         </div>
     </header>
 
@@ -100,27 +100,27 @@
             <div class="collapse @(adminOpen ? "show" : "") ms-2" id="adminSubmenu">
                 <!-- Our locomotives (signed-in → Admin area, else → public list) -->
                 @if (SignInManager.IsSignedIn(User))
-                    {
+                {
                     <a asp-area="Admin" asp-controller="Locomotives" asp-action="Index"
                        class="btn @(currentController.Equals("Locomotives", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
                         <i class="fas fa-train me-1"></i> Our locomotives
                     </a>
-                    }
+                }
                 else
-                    {
+                {
                     <a asp-area="" asp-controller="PublicLocomotives" asp-action="Index"
                        class="btn @(currentController.Equals("PublicLocomotives", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
                         <i class="fas fa-train me-1"></i> Our locomotives
                     </a>
-                    }
+                }
 
-                <!-- Calendar (provide controller/view when ready) -->
+                <!-- Calendar -->
                 <a asp-area="" asp-controller="Calendar" asp-action="Index"
                    class="btn @(currentController.Equals("Calendar", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
                     <i class="bi bi-calendar3 me-1"></i> Calendar
                 </a>
 
-                <!-- Calculator (simple) -->
+                <!-- Calculator -->
                 <a asp-area="" asp-controller="Calculator" asp-action="Index"
                    class="btn @(currentController.Equals("Calculator", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
                     <i class="bi bi-calculator me-1"></i> Calculator
@@ -128,7 +128,7 @@
             </div>
 
             @if (SignInManager.IsSignedIn(User))
-                {
+            {
                 <!-- Fuel -->
                 <button class="btn @(isFuels ? "btn-warning" : "btn-outline-warning") w-100 text-start mb-2"
                         type="button"
@@ -141,11 +141,19 @@
                 </button>
 
                 <div class="collapse @(isFuels ? "show" : "") ms-2" id="fuelSubmenu">
+                    <!-- List (Index) -->
+                    <a asp-area="" asp-controller="Fuels" asp-action="Index"
+                       class="btn @(currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("Index", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
+                        <i class="bi bi-table"></i> List
+                    </a>
+
+                    <!-- New Input (Create) -->
                     <a asp-area="" asp-controller="Fuels" asp-action="Create"
                        class="btn @(currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("Create", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
                         <i class="bi bi-plus-circle"></i> New Input
                     </a>
 
+                    <!-- Fuel Report (wide) -->
                     <a asp-area="" asp-controller="Fuels" asp-action="FuelReport"
                        class="btn @(currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("FuelReport", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
                         <i class="bi bi-graph-up-arrow"></i> Fuel Report
@@ -174,7 +182,7 @@
                         <i class="bi bi-table"></i> Shift Overview
                     </a>
                 </div>
-                }
+            }
         </nav>
 
         <!-- Main content -->

@@ -1,7 +1,8 @@
 ﻿@model NewLoco.Web.ViewModels.Fuels.FuelAllViewModel
+
 @{
     ViewData["Title"] = "Edit Fuel Record";
-    }
+}
 
 <h2 class="h5 mb-3">@ViewData["Title"]</h2>
 
@@ -22,8 +23,7 @@
 
         <div class="mb-2">
             <label asp-for="Date" class="form-label"></label>
-            <input asp-for="Date"  class="form-control"
-                   max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+            <input asp-for="Date" class="form-control" max="@DateTime.Today.ToString("yyyy-MM-dd")" />
             <span asp-validation-for="Date" class="text-danger"></span>
         </div>
 
@@ -60,12 +60,12 @@
 
         <div class="d-flex gap-2 mt-2">
             <button type="submit" class="btn btn-primary btn-sm">Save</button>
-            <a asp-action="FuelReport" class="btn btn-outline-secondary btn-sm">Cancel</a>
+            <a asp-action="Index" class="btn btn-outline-secondary btn-sm">Cancel</a>
         </div>
     </form>
 </div>
 
-    @section Styles {
+@section Styles {
     <style>
         .edit-narrow {
             max-width: 480px;
@@ -97,9 +97,10 @@
                 margin-top: .4rem !important;
             }
     </style>
-    }
+}
 
-    @section Scripts {
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
     <script>
         function n(v){if(v===undefined||v===null)return 0;if(typeof v!=='string')v=String(v);v=v.replace(',','.').trim();var x=parseFloat(v);return isNaN(x)?0:x;}
         function upd(){
@@ -117,4 +118,4 @@
             upd();
         });
     </script>
-    }
+}

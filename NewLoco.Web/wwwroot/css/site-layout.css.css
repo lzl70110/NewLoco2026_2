@@ -1,4 +1,5 @@
-﻿html, body {
+﻿/* Base sizing */
+html, body {
     height: 100%;
     margin: 0;
     font-size: 14px;
@@ -10,55 +11,130 @@
     }
 }
 
+/* Design tokens (easy to tweak) */
+:root {
+    --sidebar-w: 64px; /* collapsed width */
+    --sidebar-w-expanded: 220px; /* expanded width */
+    --navbar-h: 0px; /* set to your fixed navbar height if needed (e.g. 56px) */
+
+    --c-bg: #1f252b;
+    --c-link: #e9eef5;
+    --c-hover: rgba(255,255,255,0.08);
+    --c-active: #0d6efd;
+}
+
+/* App layout */
 .app-layout {
     display: flex;
-    height: 100%;
+    min-height: 100vh; /* more robust than height:100% */
+    width: 100%;
+    isolation: isolate; /* prevent z-index bleed */
 }
 
 /* Sidebar */
 .ultra-sidebar {
     display: flex;
     flex-direction: column;
-    background: #1f252b;
+    background: var(--c-bg);
+    color: #fff;
     transition: width 0.25s ease;
-    overflow: hidden;
+    overflow: hidden; /* hide labels when collapsed */
     flex-shrink: 0;
+    width: var(--sidebar-w); /* collapsed by default */
+    position: sticky;
+    top: var(--navbar-h);
+    max-height: calc(100vh - var(--navbar-h));
+    overflow-y: auto; /* scroll when many items */
 }
 
+/* Expand on hover only for pointer devices */
+@media (hover: hover) and (pointer: fine) {
     .ultra-sidebar:hover {
-        width: 220px;
+        width: var(--sidebar-w-expanded);
     }
+}
 
+/* Expand on keyboard focus or when toggled by a class (touch support) */
+.ultra-sidebar:focus-within {
+    width: var(--sidebar-w-expanded);
+}
+
+.ultra-sidebar.is-expanded {
+    width: var(--sidebar-w-expanded);
+}
+
+/* Sidebar links */
 .sidebar-link {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 16px;
-    color: white;
+    padding: 10px 14px;
+    color: var(--c-link);
     text-decoration: none;
     white-space: nowrap;
-    border-radius: 8px;
-    transition: background 0.2s;
+    border-radius: 10px;
+    transition: background 0.2s ease, color 0.2s ease;
+    margin: 2px 6px; /* breathing room inside narrow rail */
 }
 
     .sidebar-link:hover {
-        background: rgba(255,255,255,0.1);
+        background: var(--c-hover);
     }
 
+    .sidebar-link:focus-visible {
+        outline: 2px solid var(--c-active);
+        outline-offset: 2px;
+    }
+
+/* Active state */
 .active-link {
-    background: #0d6efd;
+    background: var(--c-active);
+    color: #fff;
     font-weight: 600;
+}
+
+    .active-link:hover {
+        background: var(--c-active);
+    }
+/* keep solid color */
+
+/* Optional: small label styling for section headers */
+.sidebar-section-title {
+    padding: 8px 16px;
+    font-size: .8rem;
+    color: #9aa4af;
+    text-transform: uppercase;
+    letter-spacing: .04em;
 }
 
 /* Main content */
 .main-content {
+    flex: 1 1 auto;
+    min-width: 0; /* prevent overflow with long content in flex layouts */
     padding: 20px;
     background: #f8f9fa;
-    overflow-y: auto;
+    overflow: auto;
 }
 
-/* Navbar fix */
+/* Navbar tweak */
 .navbar .btn {
     font-size: 0.85rem;
     padding: 0.25rem 0.5rem;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}
+
+/* (Optional) nice scrollbar for sidebar */
+.ultra-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ultra-sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.20);
+    border-radius: 4px;
 }

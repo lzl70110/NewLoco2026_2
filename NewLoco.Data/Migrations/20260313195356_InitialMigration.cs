@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace NewLoco.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class SeedSamle : Migration
+    public partial class InitialMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,7 +17,8 @@ namespace NewLoco.Data.Migrations
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Label = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -31,7 +32,9 @@ namespace NewLoco.Data.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    WorkNumber = table.Column<string>(type: "nvarchar(4)", maxLength: 4, nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -79,7 +82,7 @@ namespace NewLoco.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -100,7 +103,7 @@ namespace NewLoco.Data.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ClaimType = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ClaimValue = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -122,7 +125,7 @@ namespace NewLoco.Data.Migrations
                     LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     ProviderKey = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     ProviderDisplayName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -139,8 +142,8 @@ namespace NewLoco.Data.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    RoleId = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RoleId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -163,7 +166,7 @@ namespace NewLoco.Data.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     LoginProvider = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: false),
                     Value = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -217,7 +220,7 @@ namespace NewLoco.Data.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     LocoId = table.Column<int>(type: "int", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Date = table.Column<DateTime>(type: "date", nullable: false),
                     Shift = table.Column<int>(type: "int", nullable: false),
                     InitialValue = table.Column<decimal>(type: "decimal(9,2)", nullable: false),
                     FinalValue = table.Column<decimal>(type: "decimal(9,2)", nullable: false),
@@ -244,9 +247,9 @@ namespace NewLoco.Data.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedOn", "IsDeleted", "LocomotiveType", "MeasuringUnit", "ModifiedBy", "ModifiedOn", "Note", "Number" },
                 values: new object[,]
                 {
-                    { 1, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5746), false, 1, 1, null, null, "", "52-101" },
-                    { 2, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5753), false, 1, 2, null, null, "", "55-203" },
-                    { 3, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5756), false, 2, 2, null, null, "", "06-029" }
+                    { 1, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 792, DateTimeKind.Utc).AddTicks(2795), false, 1, 1, null, null, "", "52-101" },
+                    { 2, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 792, DateTimeKind.Utc).AddTicks(2801), false, 1, 2, null, null, "", "55-203" },
+                    { 3, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 792, DateTimeKind.Utc).AddTicks(2873), false, 2, 2, null, null, "", "06-029" }
                 });
 
             migrationBuilder.InsertData(
@@ -270,15 +273,15 @@ namespace NewLoco.Data.Migrations
                 columns: new[] { "Id", "Amount", "CreatedBy", "CreatedOn", "Date", "FinalValue", "InitialValue", "IsDeleted", "LocoId", "ModifiedBy", "ModifiedOn", "Note", "Shift" },
                 values: new object[,]
                 {
-                    { 1, 5m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(605), new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 105m, 100m, false, 1, null, null, "", 1 },
-                    { 2, 5m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(611), new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), 110m, 105m, false, 1, null, null, "", 1 },
-                    { 3, 5m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(615), new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 115m, 110m, false, 1, null, null, "", 1 },
-                    { 4, 50m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(619), new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 5050m, 5000m, false, 2, null, null, "", 1 },
-                    { 5, 50m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(622), new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), 5100m, 5050m, false, 2, null, null, "", 1 },
-                    { 6, 50m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(625), new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 5150m, 5100m, false, 2, null, null, "", 1 },
-                    { 7, 50m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(628), new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 10050m, 10000m, false, 3, null, null, "", 1 },
-                    { 8, 50m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(632), new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), 10100m, 10050m, false, 3, null, null, "", 1 },
-                    { 9, 50m, "Seeder", new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(635), new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 10150m, 10100m, false, 3, null, null, "", 1 }
+                    { 1, 5m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 105m, 100m, false, 1, null, null, "", 1 },
+                    { 2, 5m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), 110m, 105m, false, 1, null, null, "", 1 },
+                    { 3, 5m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 115m, 110m, false, 1, null, null, "", 1 },
+                    { 4, 50m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 5050m, 5000m, false, 2, null, null, "", 1 },
+                    { 5, 50m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), 5100m, 5050m, false, 2, null, null, "", 1 },
+                    { 6, 50m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 5150m, 5100m, false, 2, null, null, "", 1 },
+                    { 7, 50m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified), 10050m, 10000m, false, 3, null, null, "", 1 },
+                    { 8, 50m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified), 10100m, 10050m, false, 3, null, null, "", 1 },
+                    { 9, 50m, "Seeder", new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117), new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified), 10150m, 10100m, false, 3, null, null, "", 1 }
                 });
 
             migrationBuilder.CreateIndex(
@@ -332,9 +335,10 @@ namespace NewLoco.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_ShiftWorks_LocoId",
+                name: "IX_ShiftWorks_LocoId_Date_Shift",
                 table: "ShiftWorks",
-                column: "LocoId");
+                columns: new[] { "LocoId", "Date", "Shift" },
+                unique: true);
         }
 
         /// <inheritdoc />

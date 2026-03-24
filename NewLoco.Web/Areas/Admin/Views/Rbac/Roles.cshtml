@@ -1,0 +1,81 @@
+﻿@model IEnumerable<NewLoco.Data.Models.ApplicationRole>
+
+@{
+    ViewData["Title"] = "Roles";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+@if (TempData["Msg"] is string msg && !string.IsNullOrWhiteSpace(msg))
+{
+    <div class="alert alert-success">@msg</div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger">@err</div>
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="text-muted">@GCommon.Messages.Rbac.Info_ManageRoles</div>
+    <a asp-area="Admin"
+       asp-controller="Rbac"
+       asp-action="CreateRole"
+       class="btn btn-primary">
+        Create Role
+    </a>
+</div>
+
+@if (!(Model?.Any() ?? false))
+{
+    <div class="alert alert-info">@GCommon.Messages.Rbac.Info_NoRolesFound</div>
+}
+else
+{
+    <table class="table table-sm table-striped align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width:40%">Name</th>
+                <th style="width:40%">Label</th>
+                <th style="width:20%" class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var role in Model.OrderBy(r => r.Name))
+            {
+                <tr>
+                    <td>@role.Name</td>
+                    <td class="text-muted">@role.Label</td>
+                    <td class="text-end">
+                        <!-- View/manage permission claims for this role -->
+                        <a asp-area="Admin"
+                           asp-controller="Rbac"
+                           asp-action="RoleClaims"
+                           asp-route-roleName="@role.Name"
+                           class="btn btn-outline-secondary btn-sm me-2">
+                            Claims
+                        </a>
+
+                        <!-- Delete role (guarded in controller to prevent SysAdmin removal) -->
+                        <form asp-area="Admin"
+                              asp-controller="Rbac"
+                              asp-action="DeleteRole"
+                              method="post"
+                              class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="name" value="@role.Name" />
+                            <button type="submit"
+                                    class="btn btn-outline-danger btn-sm"
+                                    onclick="return confirm('Delete role &quot;@role.Name&quot;?');">
+                                Delete
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

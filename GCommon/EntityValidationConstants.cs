@@ -39,4 +39,16 @@ public static class EntityValidationConstants
         public const double ValueMax = 5000.0;
         public const int NoteMaxLength = 1000; 
     }
+    public static class ApplicationUser
+    {
+        public const int FullNameMinLength = 3;
+        public const int FullNameMaxLength = 100;
+        
+        public const int WorkNumberLength = 4;
+        public const string WorkNumberPattern = @"^\d{2,4}$";
+    }
+    public static class ApplicationRole
+    { 
+        public const int LabelMaxLength = 50;
+    }
 }

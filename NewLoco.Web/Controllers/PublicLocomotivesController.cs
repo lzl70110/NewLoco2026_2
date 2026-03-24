@@ -1,43 +1,46 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.Locomotives;
 
 namespace NewLoco.Web.Controllers
+{
+    // C# 12 primary constructor for the controller
+    public class PublicLocomotivesController(ILocomotiveService service) : Controller
     {
-    public class PublicLocomotivesController : Controller
-        {
-        private readonly ILocomotiveService service;
-
-        public PublicLocomotivesController(ILocomotiveService service)
-            => this.service = service ?? throw new ArgumentNullException(nameof(service));
+        // IMPORTANT: use a *different* name than the primary-ctor parameter
+        // Otherwise the field shadows the parameter and you self-initialize the field.
+        private readonly ILocomotiveService _service = service ?? throw new ArgumentNullException(nameof(service));
 
         // GET: /PublicLocomotives?filter=active|all|deleted
+        [AllowAnonymous] // <-- whitelist
         public async Task<IActionResult> Index(string? filter = "active")
-            {
-            var dtos = await service.GetAllAsync(filter);
+        {
+            var dtos = await _service.GetAllAsync(filter);
 
-            // map DTO -> public VM (enum->enum; ако при теб VM е string, ползвай .ToString())
             var model = dtos.Select(d => new LocomotiveNumberViewModel
-                {
+            {
                 Id = d.Id,
                 Number = d.Number,
                 LocomotiveType = d.LocomotiveType,
                 MeasuringUnit = d.MeasuringUnit,
                 IsDeleted = d.IsDeleted
-                }).ToList();
+            }).ToList();
 
             ViewData["CurrentFilter"] = filter;
             return View(model);
-            }
+        }
 
         // GET: /PublicLocomotives/Details/5
+        // Make it public as well if you want full public read
+        [AllowAnonymous] // <-- add if details must be public; remove if not desired
         public async Task<IActionResult> Details(int id, string? filter)
-            {
-            var dto = await service.GetDetailsAsync(id);
+        {
+            var dto = await _service.GetDetailsAsync(id);
             if (dto == null) return NotFound();
 
             var vm = new LocomotiveDetailsViewModel
-                {
+            {
                 Id = dto.Id,
                 Number = dto.Number,
                 LocomotiveType = dto.LocomotiveType,
@@ -48,10 +51,10 @@ namespace NewLoco.Web.Controllers
                 CreatedBy = dto.CreatedBy!,
                 ModifiedOn = dto.ModifiedOn,
                 ModifiedBy = dto.ModifiedBy
-                };
+            };
 
             ViewData["CurrentFilter"] = filter;
             return View(vm);
-            }
         }
     }
+}

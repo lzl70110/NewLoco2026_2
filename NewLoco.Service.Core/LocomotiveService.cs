@@ -9,14 +9,9 @@ using  NewLoco.GCommon.Enums;
 
 namespace NewLoco.Service.Core;
 
-public class LocomotiveService : ILocomotiveService
+public class LocomotiveService(LocoDbContext db) : ILocomotiveService
     {
-    private readonly LocoDbContext _db;
-
-    public LocomotiveService(LocoDbContext db)
-        {
-        _db = db;
-        }
+    private readonly LocoDbContext _db = db;
 
     // List with filter: "deleted" | "all" | default (only active)
     public async Task<IEnumerable<LocoNumberDto>> GetAllAsync(string? filter)

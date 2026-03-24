@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using NewLoco.Web.Auth;
 using NewLoco.Web.Models;
 
 
@@ -9,12 +10,13 @@ namespace NewLoco.Web.Controllers
 {
     public class HomeController : Controller
     {
-  
-
-       
-
+   
         public IActionResult Index()
         {
+            var permClaims = User.Claims
+    .Where(c => c.Type == Perm.ClaimType)
+    .Select(c => c.Value)
+    .ToList();
             return View();
         }
 
@@ -28,5 +30,7 @@ namespace NewLoco.Web.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
     }
+
 }

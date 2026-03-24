@@ -1,31 +1,47 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NewLoco.Data;
-using NewLoco.Service.Core;
-using NewLoco.Service.Core.Contracts;
-using NewLoco.Service.Core.Services;
+using NewLoco.Data.Models;                 // ApplicationUser, ApplicationRole
+using NewLoco.Service.Core.Contracts;     // IFuelService, ILocomotiveService, IShiftWorkService
+using NewLoco.Service.Core.Services;      // FuelService, LocomotiveService, ShiftWorkService
+using NewLoco.Web.Auth;                   // Perm, PermissionRequirement, PermissionHandler, AppClaimsPrincipalFactory
+using NewLoco.Web.Infrastructure;         // AppSeeder, BootstrapAdminOptions
 
-namespace NewLoco.Web 
-    {
+namespace NewLoco.Web
+{
     public class Program
+    {
+        public static async Task Main(string[] args)
         {
-        public static void Main(string[] args)
-            {
             var builder = WebApplication.CreateBuilder(args);
-            // DbContext
+
+            // --- DbContext ---
             var connectionString = builder.Configuration.GetConnectionString("DevConnection")
                 ?? throw new InvalidOperationException("Connection string 'DevConnection' not found.");
-        builder.Services.AddDbContext<LocoDbContext>(options =>
+            builder.Services.AddDbContext<LocoDbContext>(options =>
                 options.UseSqlServer(connectionString));
-       builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+            builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-            // MVC
+            // --- MVC + Razor Pages (Identity UI needs Razor Pages) ---
             builder.Services.AddControllersWithViews();
 
-            // Identity  
+            // Allow anonymous ONLY to Identity Login;
+            // everything else requires authorization (via FallbackPolicy below)
+            builder.Services.AddRazorPages(options =>
+            {
+                options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/Login");
+                // REMOVED: AccessDenied page will not be used anymore (we redirect on 403)
+                // options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/AccessDenied");
+            });
+
+            // --- Identity (custom TUser/TRole + EF stores) ---
             builder.Services
-                .AddDefaultIdentity<IdentityUser>(options =>
+                .AddDefaultIdentity<ApplicationUser>(options =>
                 {
+                    // Dev-friendly defaults; tune for production
                     options.SignIn.RequireConfirmedAccount = false;
                     options.SignIn.RequireConfirmedEmail = false;
                     options.SignIn.RequireConfirmedPhoneNumber = false;
@@ -39,53 +55,117 @@ namespace NewLoco.Web
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
                     options.Lockout.MaxFailedAccessAttempts = 255;
                 })
-                .AddEntityFrameworkStores<LocoDbContext>();           
+                .AddRoles<ApplicationRole>()               // roles enabled
+                .AddEntityFrameworkStores<LocoDbContext>() // use EF stores
+                .AddDefaultTokenProviders();               // tokens for 2FA/reset, etc.
+
+            // Cookie paths for Identity UI
             builder.Services.ConfigureApplicationCookie(options =>
             {
                 options.LoginPath = "/Identity/Account/Login";
                 options.LogoutPath = "/Identity/Account/Logout";
-                options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+
+                // CHANGED: redirect any 403 (forbidden) straight to the public list
+                // This removes the "Access denied" page entirely.
+                options.AccessDeniedPath = "/PublicLocomotives/Index";
             });
 
-            // Authorization  
-            builder.Services.AddAuthorization();
+            // Claims factory: materialize role permission-claims into user principal on sign-in
+            builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>,
+                                       AppClaimsPrincipalFactory<ApplicationUser, ApplicationRole>>();
 
-            // DI  
+            // --- Authorization ---
+            // Dynamic policy provider + handler (Perm.* built on the fly; checks "permission" claims)
+            builder.Services.AddSingleton<IAuthorizationPolicyProvider, ConventionalAuthorizationPolicyProvider>();
+            builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
+
+            // FallbackPolicy: authenticated + must have at least 1 permission claim.
+            // This ensures logged-in users with NO roles/permissions cannot access anything by default.
+            builder.Services.AddAuthorizationBuilder()
+                .SetFallbackPolicy(new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .RequireAssertion(ctx =>
+                        // IMPORTANT: Perm.ClaimType must be "permission"
+                        ctx.User.HasClaim(c => c.Type == Perm.ClaimType)
+                    )
+                    .Build());
+
+            // --- DI for app services ---
             builder.Services.AddScoped<IFuelService, FuelService>();
-            builder.Services.AddScoped<ILocomotiveService, LocomotiveService>();
+            builder.Services.AddScoped<ILocomotiveService, Service.Core.LocomotiveService>();
             builder.Services.AddScoped<IShiftWorkService, ShiftWorkService>();
+
+            // --- BootstrapAdmin options (User Secrets / appsettings) ---
+            builder.Services.Configure<BootstrapAdminOptions>(builder.Configuration.GetSection("BootstrapAdmin"));
 
             var app = builder.Build();
 
-            // Pipeline
+            // --- Pipeline ---
             if (app.Environment.IsDevelopment())
-                {
-                app.UseMigrationsEndPoint();
-                }
+            {
+                app.UseMigrationsEndPoint(); // dev errors + migrations endpoint
+            }
             else
-                {
+            {
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
-                }
+            }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
-            app.UseAuthentication();
+
+            app.UseAuthentication(); // must be before UseAuthorization
             app.UseAuthorization();
 
-            // Routes
+            // --- Idempotent seed: roles/permissions always; admin only if Enabled=true in secrets ---
+            // Run seeding inside scope
+            using (var scope = app.Services.CreateScope())
+            {
+                await AppSeeder.SeedAsync(scope.ServiceProvider);
+            }
+
+            // --- Routes ---
+            // Areas
             app.MapControllerRoute(
                 name: "areas",
                 pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-          app.MapControllerRoute(
+
+            // Optional: alias so /Admin/Roles/Create maps to RbacController
+            app.MapControllerRoute(
+                name: "admin-roles-alias",
+                pattern: "Admin/Roles/{action=Roles}/{roleName?}",
+                defaults: new { area = "Admin", controller = "Rbac" });
+
+            // PUBLIC WHITELIST (visible even for logged-in users without permissions)
+            // We attach AllowAnonymous metadata to these specific endpoints to bypass FallbackPolicy.
+            app.MapControllerRoute(
+                    name: "public-locomotives-index",
+                    pattern: "PublicLocomotives/Index",
+                    defaults: new { controller = "PublicLocomotives", action = "Index" })
+               .WithMetadata(new AllowAnonymousAttribute()); // acts like [AllowAnonymous] on the action
+
+            app.MapControllerRoute(
+                    name: "calendar-index",
+                    pattern: "Calendar/Index",
+                    defaults: new { controller = "Calendar", action = "Index" })
+               .WithMetadata(new AllowAnonymousAttribute());
+
+            app.MapControllerRoute(
+                    name: "calculator-index",
+                    pattern: "Calculator/Index",
+                    defaults: new { controller = "Calculator", action = "Index" })
+               .WithMetadata(new AllowAnonymousAttribute());
+
+            // Default
+            app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 
-          app.MapRazorPages();
+            app.MapRazorPages(); // Identity UI
 
-            app.Run();
-            }
+            await app.RunAsync();
         }
     }
+}

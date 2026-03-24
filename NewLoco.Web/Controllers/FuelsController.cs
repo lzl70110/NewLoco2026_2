@@ -1,34 +1,39 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System;
+using System.Globalization;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using NewLoco.Service.Core.Contracts;
+using NewLoco.Web.Auth; // Perm constants
 using NewLoco.Web.ViewModels.Fuels;
-using System.Globalization;
 
 namespace NewLoco.Web.Controllers
 {
-    [Authorize]
+    // Class-level guard: anyone reaching Fuels must have 'read' permission
+    [Authorize(Policy = Perm.Fuel.View)]
     public class FuelsController(
         IFuelService fuelService,
         ILocomotiveService locoService,
         ILogger<FuelsController> logger) : BaseController
     {
-        // use primary-ctor parameters to initialize backing fields
+        // Init backing fields via primary-ctor parameters
         private readonly IFuelService _fuelService = fuelService ?? throw new ArgumentNullException(nameof(fuelService));
         private readonly ILocomotiveService _locoService = locoService ?? throw new ArgumentNullException(nameof(locoService));
         private readonly ILogger<FuelsController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        // NEW: slim list view (Locomotive, Date, Initial, Final)
-
+        // Slim list view (Locomotive, Date, Initial, Final)
+        [HttpGet]
         public IActionResult Index()
         {
             var vm = _fuelService.GetForIndexLatest();
             return View(vm);
         }
 
-
-        // NEW: full details view of a single fuel record
+        // Full details view of a single fuel record
+        [HttpGet]
         public IActionResult Details(int id)
         {
             var vm = _fuelService.GetForEdit(id);
@@ -36,7 +41,8 @@ namespace NewLoco.Web.Controllers
             return View(vm);
         }
 
-        // kept: full report (wide dataset)
+        // Full report (wide dataset)
+        [HttpGet]
         public IActionResult FuelReport()
         {
             var vm = _fuelService.GetAll();
@@ -51,6 +57,9 @@ namespace NewLoco.Web.Controllers
                 .ToList();
         }
 
+        // Create
+        [HttpGet]
+        [Authorize(Policy = Perm.Fuel.Create)]
         public async Task<IActionResult> Create()
         {
             await PopulateLocomotivesAsync();
@@ -59,6 +68,7 @@ namespace NewLoco.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Perm.Fuel.Create)]
         public async Task<IActionResult> Create(CreateFuelViewModel model)
         {
             // ignore client-provided computed fields; server will compute them
@@ -87,6 +97,9 @@ namespace NewLoco.Web.Controllers
             }
         }
 
+        // Edit
+        [HttpGet]
+        [Authorize(Policy = Perm.Fuel.Edit)]
         public IActionResult Edit(int id)
         {
             var vm = _fuelService.GetForEdit(id);
@@ -96,17 +109,19 @@ namespace NewLoco.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Perm.Fuel.Edit)]
         public async Task<IActionResult> Edit(int id, FuelAllViewModel model)
         {
             if (id != model.Id) return BadRequest();
 
+            // remove non-editable keys from ModelState
             string[] nonEditableKeys =
             [
                 nameof(FuelAllViewModel.LocomotiveNumber),
                 nameof(FuelAllViewModel.InitialFuel),
                 nameof(FuelAllViewModel.Consumption),
                 nameof(FuelAllViewModel.IsDeleted),
-                "CreatedOn","CreatedByUserName","EditedBy","EditedOn"
+                "CreatedOn", "CreatedByUserName", "EditedBy", "EditedOn"
             ];
             foreach (var key in nonEditableKeys) ModelState.Remove(key);
 
@@ -127,8 +142,10 @@ namespace NewLoco.Web.Controllers
             }
         }
 
+        // Delete / Undo delete
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Perm.Fuel.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var user = User?.Identity?.Name ?? "system";
@@ -147,6 +164,7 @@ namespace NewLoco.Web.Controllers
 
         [HttpPost, ActionName("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Perm.Fuel.Delete)]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var user = User?.Identity?.Name ?? "system";
@@ -165,6 +183,7 @@ namespace NewLoco.Web.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Policy = Perm.Fuel.Delete)]
         public async Task<IActionResult> UndoDelete(int id)
         {
             var user = User?.Identity?.Name ?? "system";
@@ -181,6 +200,7 @@ namespace NewLoco.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // Utility for Create form (prev final fuel) — keep 'read' guard from class-level
         [HttpGet]
         public async Task<IActionResult> PrevFinal(int locoId, string date)
         {

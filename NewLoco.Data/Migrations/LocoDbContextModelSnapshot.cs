@@ -22,14 +22,127 @@ namespace NewLoco.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LoginProvider")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
+            modelBuilder.Entity("NewLoco.Data.Models.ApplicationRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
@@ -49,35 +162,11 @@ namespace NewLoco.Data.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("NewLoco.Data.Models.ApplicationUser", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
@@ -92,6 +181,11 @@ namespace NewLoco.Data.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -126,6 +220,10 @@ namespace NewLoco.Data.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
+                    b.Property<string>("WorkNumber")
+                        .HasMaxLength(4)
+                        .HasColumnType("nvarchar(4)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
@@ -137,91 +235,6 @@ namespace NewLoco.Data.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("AspNetUsers", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
-                {
-                    b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("ProviderKey")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("LoginProvider", "ProviderKey");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserLogins", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("LoginProvider")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(128)
-                        .HasColumnType("nvarchar(128)");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("UserId", "LoginProvider", "Name");
-
-                    b.ToTable("AspNetUserTokens", (string)null);
                 });
 
             modelBuilder.Entity("NewLoco.Data.Models.Fuel.Fuel", b =>
@@ -473,7 +486,7 @@ namespace NewLoco.Data.Migrations
                         {
                             Id = 1,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5746),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 792, DateTimeKind.Utc).AddTicks(2795),
                             IsDeleted = false,
                             LocomotiveType = 1,
                             MeasuringUnit = 1,
@@ -484,7 +497,7 @@ namespace NewLoco.Data.Migrations
                         {
                             Id = 2,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5753),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 792, DateTimeKind.Utc).AddTicks(2801),
                             IsDeleted = false,
                             LocomotiveType = 1,
                             MeasuringUnit = 2,
@@ -495,7 +508,7 @@ namespace NewLoco.Data.Migrations
                         {
                             Id = 3,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 533, DateTimeKind.Utc).AddTicks(5756),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 792, DateTimeKind.Utc).AddTicks(2873),
                             IsDeleted = false,
                             LocomotiveType = 2,
                             MeasuringUnit = 2,
@@ -524,7 +537,7 @@ namespace NewLoco.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("date");
 
                     b.Property<decimal>("FinalValue")
                         .HasColumnType("decimal(9,2)");
@@ -554,7 +567,8 @@ namespace NewLoco.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LocoId");
+                    b.HasIndex("LocoId", "Date", "Shift")
+                        .IsUnique();
 
                     b.ToTable("ShiftWorks", (string)null);
 
@@ -564,7 +578,7 @@ namespace NewLoco.Data.Migrations
                             Id = 1,
                             Amount = 5m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(605),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 105m,
                             InitialValue = 100m,
@@ -578,7 +592,7 @@ namespace NewLoco.Data.Migrations
                             Id = 2,
                             Amount = 5m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(611),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 110m,
                             InitialValue = 105m,
@@ -592,7 +606,7 @@ namespace NewLoco.Data.Migrations
                             Id = 3,
                             Amount = 5m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(615),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 115m,
                             InitialValue = 110m,
@@ -606,7 +620,7 @@ namespace NewLoco.Data.Migrations
                             Id = 4,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(619),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 5050m,
                             InitialValue = 5000m,
@@ -620,7 +634,7 @@ namespace NewLoco.Data.Migrations
                             Id = 5,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(622),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 5100m,
                             InitialValue = 5050m,
@@ -634,7 +648,7 @@ namespace NewLoco.Data.Migrations
                             Id = 6,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(625),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 5150m,
                             InitialValue = 5100m,
@@ -648,7 +662,7 @@ namespace NewLoco.Data.Migrations
                             Id = 7,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(628),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 12, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 10050m,
                             InitialValue = 10000m,
@@ -662,7 +676,7 @@ namespace NewLoco.Data.Migrations
                             Id = 8,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(632),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 13, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 10100m,
                             InitialValue = 10050m,
@@ -676,7 +690,7 @@ namespace NewLoco.Data.Migrations
                             Id = 9,
                             Amount = 50m,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 2, 15, 9, 19, 0, 534, DateTimeKind.Utc).AddTicks(635),
+                            CreatedOn = new DateTime(2026, 3, 13, 19, 53, 55, 793, DateTimeKind.Utc).AddTicks(2117),
                             Date = new DateTime(2026, 1, 14, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             FinalValue = 10150m,
                             InitialValue = 10100m,
@@ -687,51 +701,51 @@ namespace NewLoco.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("NewLoco.Data.Models.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("NewLoco.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("NewLoco.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("NewLoco.Data.Models.ApplicationRole", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("NewLoco.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<System.Guid>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("NewLoco.Data.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)

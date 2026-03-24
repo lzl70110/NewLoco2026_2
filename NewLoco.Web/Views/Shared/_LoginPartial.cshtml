@@ -1,26 +1,80 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using NewLoco.Data.Models
+
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<ApplicationRole> RoleManager
 
 <ul class="navbar-nav">
-@if (SignInManager.IsSignedIn(User))
-{
-    <li class="nav-item">
-        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
-        </form>
-    </li>
-}
-else
-{
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
-    </li>
-}
+    @if (SignInManager.IsSignedIn(User))
+    {
+        // Resolve current user and roles
+        var user = await UserManager.GetUserAsync(User);
+        var roleNames = user is null ? Array.Empty<string>() : await UserManager.GetRolesAsync(user);
+
+        // Build badge data: label (friendly) + color and icon per role
+        var badges = new List<(string Label, string Css, string Icon)>();
+        foreach (var rn in roleNames)
+        {
+            var roleObj = await RoleManager.FindByNameAsync(rn); // try to get Label from ApplicationRole
+            var label = roleObj?.Label ?? rn;
+
+            var css = rn switch
+            {
+                "SysAdmin" => "bg-danger",    // red
+                "Operator" => "bg-primary",   // blue
+                "Viewer" => "bg-secondary", // gray
+                _ => "bg-dark"
+            };
+
+            var icon = rn switch
+            {
+                "SysAdmin" => "bi-shield-lock-fill",
+                "Operator" => "bi-gear-fill",
+                "Viewer" => "bi-eye-fill",
+                _ => "bi-person-badge-fill"
+            };
+
+            badges.Add((label, css, icon));
+        }
+
+        <li class="nav-item d-flex align-items-center me-2">
+            @* Role badges before the email *@
+            @if (badges.Count == 0)
+            {
+                <span class="badge rounded-pill text-bg-light border me-2" title="No role assigned">No role</span>
+            }
+            else
+            {
+                foreach (var b in badges)
+                {
+                    <span class="badge rounded-pill text-white @b.Css me-1" title="Role">
+                        <i class="bi @b.Icon me-1" aria-hidden="true"></i>@b.Label
+                    </span>
+                }
+            }
+
+            @* Email / Manage link *@
+            <a class="nav-link text-dark px-2"
+               asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage account">
+                @user?.Email
+            </a>
+        </li>
+        <li class="nav-item">
+            <form class="form-inline" method="post"
+                  asp-area="Identity" asp-page="/Account/Logout"
+                  asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                <button type="submit" class="nav-link btn btn-link text-dark px-2">Logout</button>
+            </form>
+        </li>
+    }
+    else
+    {
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+    }
 </ul>

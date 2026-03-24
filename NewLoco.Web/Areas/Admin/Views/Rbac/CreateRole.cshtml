@@ -1,0 +1,42 @@
+﻿@model NewLoco.Web.Areas.Admin.Models.RoleCreateInput
+@using GCommon
+
+@{
+    ViewData["Title"] = "Create Role";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="row">
+    <div class="col-md-6 col-lg-5">
+        @* POST to Admin/Roles/Create *@
+        <form asp-area="Admin" asp-controller="Roles" asp-action="Create" method="post">
+            @* Anti-forgery is auto-included by the form tag helper, but keeping this is OK *@
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+            <div class="mb-3">
+                <label asp-for="Name" class="form-label"></label>
+                <input asp-for="Name" class="form-control" placeholder="Enter role name (e.g., SysAdmin, Operator)" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Label" class="form-label"></label>
+                <input asp-for="Label" class="form-control" placeholder="Human-friendly label (e.g., СисАдмин, Оператор)" />
+                <span asp-validation-for="Label" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <a asp-area="Admin" asp-controller="Roles" asp-action="Index" class="btn btn-secondary">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @* Client-side validation (jquery + unobtrusive) *@
+    <partial name="_ValidationScriptsPartial" />
+}

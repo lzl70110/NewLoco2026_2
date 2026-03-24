@@ -1,26 +1,15 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using NewLoco.Data.Models
+@using NewLoco.Web.Auth
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<ApplicationRole> RoleManager
+@inject IAuthorizationService AuthorizationService
 
 @{
     var title = ViewData["Title"] as string ?? "NewLoco";
     var userName = User.Identity?.IsAuthenticated == true ? (User.Identity?.Name ?? "User") : "Guest";
-
-    // route context (used to open/mark active sections)
-    var currentController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty);
-    var currentAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty);
-
-    bool isFuels = currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase);
-    bool isShiftWorks = currentController.Equals("ShiftWorks", StringComparison.OrdinalIgnoreCase);
-
-    // Admin section considered open on these controllers
-    bool isAdminSection =
-        currentController.Equals("Locomotives", StringComparison.OrdinalIgnoreCase) ||
-        currentController.Equals("PublicLocomotives", StringComparison.OrdinalIgnoreCase) || // keep per your current logic
-        currentController.Equals("Calendar", StringComparison.OrdinalIgnoreCase) ||
-        currentController.Equals("Calculator", StringComparison.OrdinalIgnoreCase);
-
-    bool adminOpen = isAdminSection; // keep Admin submenu expanded on Admin pages
 }
 
 <!DOCTYPE html>
@@ -31,51 +20,119 @@
     <title>@title</title>
 
     <!-- Vendor CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          rel="stylesheet" crossorigin="anonymous" />
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-    <link rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- App CSS -->
-    <link rel="stylesheet" href="~/css/site-layout.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/site-layout.css.css" asp-append-version="true" /> @* uses existing filename *@
 
     @RenderSection("Styles", required: false)
 
     <style>
-        /* active submenu visual */
+        /* Active state for left menu buttons */
         .btn-sub-active {
             border-color: var(--bs-primary);
             background-color: rgba(13,110,253,.08);
             color: #0d6efd;
             font-weight: 600;
         }
+        /* Compact sidebar buttons */
+        .sidebar-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            margin-bottom: .5rem;
+        }
+
+        .sidebar-section-title {
+            font-weight: 600;
+            color: #6c757d;
+            margin: .35rem 0 .25rem 0;
+        }
+        /* Accordion visuals inside sidebar */
+        .accordion-button {
+            background: transparent;
+            border-radius: .375rem;
+            padding: .5rem .6rem;
+        }
+
+            .accordion-button:not(.collapsed) {
+                background: #e7f1ff;
+                box-shadow: none;
+            }
+
+        .accordion-body a.btn {
+            margin-bottom: .45rem;
+        }
     </style>
 </head>
 <body>
     <!-- Top navbar -->
     <header class="navbar navbar-dark bg-dark px-3">
-        <!-- brand to Home -->
+        <!-- Brand to Home -->
         <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
 
-        <div class="ms-auto d-flex align-items-center">
-            <span class="text-white me-3">@userName</span>
-
-            @if (SignInManager.IsSignedIn(User))
+        <div class="ms-auto d-flex align-items-center gap-2">
+            @if (SignInManager.IsSignedIn(User!))
             {
-                <!-- Logout to Identity Razor Page -->
-                <form method="post"
-                      asp-area="Identity"
-                      asp-page="/Account/Logout"
-                      asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
-                      class="m-0">
-                    <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
-                </form>
+                // Resolve current user + roles
+                var user = await UserManager.GetUserAsync(User!);
+                var roleNames = user is null ? Array.Empty<string>() : await UserManager.GetRolesAsync(user);
+
+                // Helper for role visuals
+                (string Css, string Icon) RoleVisual(string rn) => rn switch
+                {
+                    "SysAdmin" => ("bg-danger", "bi-shield-lock-fill"),
+                    "Operator" => ("bg-primary", "bi-gear-fill"),
+                    "Viewer" => ("bg-secondary", "bi-eye-fill"),
+                    _ => ("bg-dark", "bi-person-badge-fill")
+                };
+
+                // Build role badges
+                var badges = new List<(string Label, string Css, string Icon)>();
+                foreach (var rn in roleNames)
+                {
+                    var roleObj = await RoleManager.FindByNameAsync(rn);
+                    var label = roleObj?.Label ?? rn;
+                    var (css, icon) = RoleVisual(rn);
+                    badges.Add((label, css, icon));
+                }
+
+                <!-- Badges + Email + Logout -->
+                <div class="d-flex align-items-center gap-2">
+                    @if (badges.Count == 0)
+                    {
+                        <span class="badge rounded-pill text-bg-light border" title="No role assigned">No role</span>
+                    }
+                    else
+                    {
+                        foreach (var b in badges)
+                        {
+                            <span class="badge rounded-pill text-white @b.Css" title="Role">
+                                <i class="bi @b.Icon me-1" aria-hidden="true"></i>@b.Label
+                            </span>
+                        }
+                    }
+
+                    <a class="nav-link text-white px-2"
+                       asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage account">
+                        @user?.Email
+                    </a>
+
+                    <form method="post"
+                          asp-area="Identity"
+                          asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                          class="m-0">
+                        <button type="submit" class="btn btn-sm btn-outline-light">Logout</button>
+                    </form>
+                </div>
             }
             else
             {
+                <span class="text-white me-2">@userName</span>
                 <a asp-area="Identity" asp-page="/Account/Login"
                    class="btn btn-sm btn-outline-light">Login</a>
             }
@@ -85,104 +142,7 @@
     <div class="d-flex" style="height: calc(100vh - 56px);">
         <!-- Sidebar -->
         <nav class="bg-light p-3" style="width:20%; overflow-y:auto;">
-
-            <!-- ADMIN (collapsible) -->
-            <button class="btn @(adminOpen ? "btn-secondary" : "btn-outline-secondary") w-100 text-start mb-2"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#adminSubmenu"
-                    aria-expanded="@(adminOpen.ToString().ToLower())"
-                    aria-controls="adminSubmenu">
-                <i class="bi bi-gear-fill me-1"></i> Admin
-                <i class="bi bi-caret-down-fill float-end"></i>
-            </button>
-
-            <div class="collapse @(adminOpen ? "show" : "") ms-2" id="adminSubmenu">
-                <!-- Our locomotives (signed-in → Admin area, else → public list) -->
-                @if (SignInManager.IsSignedIn(User))
-                {
-                    <a asp-area="Admin" asp-controller="Locomotives" asp-action="Index"
-                       class="btn @(currentController.Equals("Locomotives", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="fas fa-train me-1"></i> Our locomotives
-                    </a>
-                }
-                else
-                {
-                    <a asp-area="" asp-controller="PublicLocomotives" asp-action="Index"
-                       class="btn @(currentController.Equals("PublicLocomotives", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="fas fa-train me-1"></i> Our locomotives
-                    </a>
-                }
-
-                <!-- Calendar -->
-                <a asp-area="" asp-controller="Calendar" asp-action="Index"
-                   class="btn @(currentController.Equals("Calendar", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                    <i class="bi bi-calendar3 me-1"></i> Calendar
-                </a>
-
-                <!-- Calculator -->
-                <a asp-area="" asp-controller="Calculator" asp-action="Index"
-                   class="btn @(currentController.Equals("Calculator", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                    <i class="bi bi-calculator me-1"></i> Calculator
-                </a>
-            </div>
-
-            @if (SignInManager.IsSignedIn(User))
-            {
-                <!-- Fuel -->
-                <button class="btn @(isFuels ? "btn-warning" : "btn-outline-warning") w-100 text-start mb-2"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#fuelSubmenu"
-                        aria-expanded="@(isFuels.ToString().ToLower())"
-                        aria-controls="fuelSubmenu">
-                    <i class="bi bi-fuel-pump"></i> Fuel
-                    <i class="bi bi-caret-down-fill float-end"></i>
-                </button>
-
-                <div class="collapse @(isFuels ? "show" : "") ms-2" id="fuelSubmenu">
-                    <!-- List (Index) -->
-                    <a asp-area="" asp-controller="Fuels" asp-action="Index"
-                       class="btn @(currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("Index", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="bi bi-table"></i> List
-                    </a>
-
-                    <!-- New Input (Create) -->
-                    <a asp-area="" asp-controller="Fuels" asp-action="Create"
-                       class="btn @(currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("Create", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="bi bi-plus-circle"></i> New Input
-                    </a>
-
-                    <!-- Fuel Report (wide) -->
-                    <a asp-area="" asp-controller="Fuels" asp-action="FuelReport"
-                       class="btn @(currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("FuelReport", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="bi bi-graph-up-arrow"></i> Fuel Report
-                    </a>
-                </div>
-
-                <!-- ShiftWorks -->
-                <button class="btn @(isShiftWorks ? "btn-info" : "btn-outline-info") w-100 text-start mb-2"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#shiftSubmenu"
-                        aria-expanded="@(isShiftWorks.ToString().ToLower())"
-                        aria-controls="shiftSubmenu">
-                    <i class="bi bi-calendar-check"></i> Shift Work
-                    <i class="bi bi-caret-down-fill float-end"></i>
-                </button>
-
-                <div class="collapse @(isShiftWorks ? "show" : "") ms-2" id="shiftSubmenu">
-                    <a asp-area="" asp-controller="ShiftWorks" asp-action="Create"
-                       class="btn @(currentController.Equals("ShiftWorks", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("Create", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="bi bi-plus-circle"></i> New Shift
-                    </a>
-
-                    <a asp-area="" asp-controller="ShiftWorks" asp-action="Index"
-                       class="btn @(currentController.Equals("ShiftWorks", StringComparison.OrdinalIgnoreCase) && currentAction.Equals("Index", StringComparison.OrdinalIgnoreCase) ? "btn-sub-active" : "btn-outline-secondary") w-100 text-start mb-2">
-                        <i class="bi bi-table"></i> Shift Overview
-                    </a>
-                </div>
-            }
+            @await Html.PartialAsync("_Sidebar") <!-- Sidebar is split into its own partial -->
         </nav>
 
         <!-- Main content -->
@@ -192,8 +152,7 @@
     </div>
 
     <!-- Vendor JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-            crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 
     @RenderSection("Scripts", required: false)
 </body>

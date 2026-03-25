@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewLoco.Data;
 
@@ -11,9 +12,11 @@ using NewLoco.Data;
 namespace NewLoco.Data.Migrations
 {
     [DbContext(typeof(LocoDbContext))]
-    partial class LocoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325045950_ShiftWorkUpdate")]
+    partial class ShiftWorkUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

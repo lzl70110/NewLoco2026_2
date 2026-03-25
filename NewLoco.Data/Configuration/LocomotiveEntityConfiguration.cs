@@ -31,7 +31,7 @@ namespace NewLoco.Data.Configurations
 
             builder.HasMany(l => l.ShiftWorks)
                 .WithOne(s => s.Locomotive)
-                .HasForeignKey(s => s.LocoId)
+                .HasForeignKey(s => s.LocomotiveId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.HasMany(l => l.Fuels)

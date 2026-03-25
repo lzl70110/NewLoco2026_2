@@ -1,13 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+namespace NewLoco.Web.ViewModels.ShiftWorks;
 
-namespace NewLoco.Web.ViewModels.ShiftWorks
-    {
-    public class CreateShiftWorkViewModel : ShiftWorksViewModelBase
-        {
-        
-        public decimal TotalValue => FinalValue - InitialValue;
+public class CreateShiftWorkViewModel : ShiftWorksViewModelBase
+{
+    [BindNever] // Do not bind from POST (computed on server)
+    public decimal TotalValue => FinalValue - InitialValue;
 
-       
-        public DateTime? InitialValueDate { get; set; }
-        }
-    }
+    public DateTime? InitialValueDate { get; set; }
+}

@@ -1,35 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
 using NewLoco.GCommon.Enums;
-using static NewLoco.GCommon.EntityValidationConstants.ShiftWork;
-namespace NewLoco.Data.Models;
 
-public class ShiftWork : BaseEntity
+namespace NewLoco.Data.Models
+{
+    public class ShiftWork : BaseEntity
     {
-    [Key] 
-    public int Id { get; set; }
+        public int Id { get; set; }
+        public int LocomotiveId { get; set; }
+        public Locomotive? Locomotive { get; set; }
+        public DateTime Date { get; set; }
+        public Shift Shift { get; set; }
+        public decimal InitialValue { get; set; }
+        public decimal FinalValue { get; set; }
+        public decimal Amount { get; set; }
 
-    [Required]
-    [ForeignKey(nameof(Locomotive))]
-    public int LocoId { get; set; }
-
-    [Required]
-    public Locomotive Locomotive { get; set; } = null!;
-
-    public DateTime Date { get; set; }
-
-    public Shift Shift { get; set; } = Shift.Day;
-
-    [Required]
-    [Column(TypeName = Dec)]
-    public decimal InitialValue { get; set; }
-
-    [Required]
-    [Column(TypeName = Dec)]
-    public decimal FinalValue { get; set; }
-
-    [Required]
-    [Column(TypeName = Dec)]
-    public decimal Amount { get; set; }
-
+       
     }
+}

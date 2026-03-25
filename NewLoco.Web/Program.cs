@@ -1,12 +1,14 @@
-﻿using System;
+﻿// File: NewLoco.Web/Program.cs
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NewLoco.Data;
 using NewLoco.Data.Models;                 // ApplicationUser, ApplicationRole
-using NewLoco.Service.Core.Contracts;     // IFuelService, ILocomotiveService, IShiftWorkService
-using NewLoco.Service.Core.Services;      // FuelService, LocomotiveService, ShiftWorkService
+using NewLoco.Service.Core;
+using NewLoco.Service.Core.Contracts;     // FuelPoliciesOptions + service contracts
+using NewLoco.Service.Core.Services;      // FuelService, LocomotiveService, ShiftWorkService, FuelEstimator
 using NewLoco.Web.Auth;                   // Perm, PermissionRequirement, PermissionHandler, AppClaimsPrincipalFactory
 using NewLoco.Web.Infrastructure;         // AppSeeder, BootstrapAdminOptions
 
@@ -21,19 +23,35 @@ namespace NewLoco.Web
             // --- DbContext ---
             var connectionString = builder.Configuration.GetConnectionString("DevConnection")
                 ?? throw new InvalidOperationException("Connection string 'DevConnection' not found.");
+
             builder.Services.AddDbContext<LocoDbContext>(options =>
-                options.UseSqlServer(connectionString));
+            {
+                options.UseSqlServer(connectionString);
+
+                // DEV-only diagnostics for EF (safe to keep behind env check)
+                if (builder.Environment.IsDevelopment())
+                {
+                    options.EnableDetailedErrors();
+                    options.EnableSensitiveDataLogging();
+                }
+            });
+
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             // --- MVC + Razor Pages (Identity UI needs Razor Pages) ---
-            builder.Services.AddControllersWithViews();
+            builder.Services
+                .AddControllersWithViews()
+#if DEBUG
+                .AddRazorRuntimeCompilation() // optional: speeds up .cshtml edits in dev
+#endif
+                ;
 
             // Allow anonymous ONLY to Identity Login;
             // everything else requires authorization (via FallbackPolicy below)
             builder.Services.AddRazorPages(options =>
             {
                 options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/Login");
-                // REMOVED: AccessDenied page will not be used anymore (we redirect on 403)
+               
                 // options.Conventions.AllowAnonymousToAreaPage("Identity", "/Account/AccessDenied");
             });
 
@@ -55,7 +73,7 @@ namespace NewLoco.Web
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
                     options.Lockout.MaxFailedAccessAttempts = 255;
                 })
-                .AddRoles<ApplicationRole>()               // roles enabled
+                .AddRoles<ApplicationRole>()              // roles enabled
                 .AddEntityFrameworkStores<LocoDbContext>() // use EF stores
                 .AddDefaultTokenProviders();               // tokens for 2FA/reset, etc.
 
@@ -65,8 +83,7 @@ namespace NewLoco.Web
                 options.LoginPath = "/Identity/Account/Login";
                 options.LogoutPath = "/Identity/Account/Logout";
 
-                // CHANGED: redirect any 403 (forbidden) straight to the public list
-                // This removes the "Access denied" page entirely.
+                // redirect any 403 (forbidden) straight to the public list
                 options.AccessDeniedPath = "/PublicLocomotives/Index";
             });
 
@@ -80,7 +97,6 @@ namespace NewLoco.Web
             builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
             // FallbackPolicy: authenticated + must have at least 1 permission claim.
-            // This ensures logged-in users with NO roles/permissions cannot access anything by default.
             builder.Services.AddAuthorizationBuilder()
                 .SetFallbackPolicy(new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser()
@@ -94,9 +110,23 @@ namespace NewLoco.Web
             builder.Services.AddScoped<IFuelService, FuelService>();
             builder.Services.AddScoped<ILocomotiveService, Service.Core.LocomotiveService>();
             builder.Services.AddScoped<IShiftWorkService, ShiftWorkService>();
+            builder.Services.AddScoped<IFuelEstimator, FuelEstimator>(); // + default fuel suggestion per hours/type
 
-            // --- BootstrapAdmin options (User Secrets / appsettings) ---
+            // --- Options binding ---
             builder.Services.Configure<BootstrapAdminOptions>(builder.Configuration.GetSection("BootstrapAdmin"));
+
+            // Fail-fast validation for FuelPolicies (bind + validate on start)
+            builder.Services
+                .AddOptions<FuelPoliciesOptions>()
+                .Bind(builder.Configuration.GetSection("FuelPolicies"))
+                .Validate(o => o is not null, "FuelPolicies section missing")
+                .Validate(o => o.DepotStepLiters > 0, "DepotStepLiters must be > 0")
+                .Validate(o => o.PerClassSafety is not null && o.PerClassSafety.Count > 0,
+                          "PerClassSafety must contain at least one class")
+                // If you want to enforce specific classes, uncomment below:
+                //.Validate(o => new[] { "52", "55", "06" }.All(k => o.PerClassSafety.ContainsKey(k)),
+                //          "PerClassSafety must define thresholds for classes 52, 55, and 06")
+                .ValidateOnStart();
 
             var app = builder.Build();
 
@@ -120,7 +150,6 @@ namespace NewLoco.Web
             app.UseAuthorization();
 
             // --- Idempotent seed: roles/permissions always; admin only if Enabled=true in secrets ---
-            // Run seeding inside scope
             using (var scope = app.Services.CreateScope())
             {
                 await AppSeeder.SeedAsync(scope.ServiceProvider);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;   // <-- for ModelStateDictionary
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
 using NewLoco.Service.Core.Contracts;
@@ -71,12 +72,24 @@ namespace NewLoco.Web.Controllers
         [Authorize(Policy = Perm.Fuel.Create)]
         public async Task<IActionResult> Create(CreateFuelViewModel model)
         {
-            // ignore client-provided computed fields; server will compute them
+            // Ignore client-provided computed fields; server will compute them
             ModelState.Remove(nameof(CreateFuelViewModel.InitialFuel));
             ModelState.Remove(nameof(CreateFuelViewModel.Consumption));
 
+            // If the Create view posts other read-only fields, remove them too (defensive):
+            ModelState.Remove("LocomotiveNumber");
+            ModelState.Remove("CreatedOn");
+            ModelState.Remove("CreatedByUserName");
+            ModelState.Remove("EditedBy");
+            ModelState.Remove("EditedOn");
+
+            // IMPORTANT: Clear stale errors and re-validate on the server
+            ModelState.Clear();
+            TryValidateModel(model);
+
             if (!ModelState.IsValid)
             {
+                LogModelStateErrors(ModelState);
                 await PopulateLocomotivesAsync();
                 return View(model);
             }
@@ -87,6 +100,13 @@ namespace NewLoco.Web.Controllers
                 await _fuelService.CreateAsync(model, user);
                 TempData["Success"] = "Fuel entry created.";
                 return RedirectToAction(nameof(Index));
+            }
+            catch (InvalidOperationException ex)
+            {
+                // domain validation (10L step, hard floor, etc.)
+                ModelState.AddModelError(string.Empty, ex.Message);
+                await PopulateLocomotivesAsync();
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -125,7 +145,15 @@ namespace NewLoco.Web.Controllers
             ];
             foreach (var key in nonEditableKeys) ModelState.Remove(key);
 
-            if (!ModelState.IsValid) return View(model);
+            // Re-validate server-side to drop stale errors (optional but consistent)
+            ModelState.Clear();
+            TryValidateModel(model);
+
+            if (!ModelState.IsValid)
+            {
+                LogModelStateErrors(ModelState);
+                return View(model);
+            }
 
             var user = User?.Identity?.Name ?? "system";
             try
@@ -133,6 +161,11 @@ namespace NewLoco.Web.Controllers
                 await _fuelService.EditAsync(id, model, user);
                 TempData["Success"] = "Fuel entry updated.";
                 return RedirectToAction(nameof(Index));
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -214,6 +247,15 @@ namespace NewLoco.Web.Controllers
 
             var value = await _fuelService.GetPrevFinalAsync(locoId, parsed);
             return Json(new { value });
+        }
+
+        // --- helper: log invalid ModelState reasons ---
+        private void LogModelStateErrors(ModelStateDictionary ms)
+        {
+            var errors = ms
+                .Where(kvp => kvp.Value?.Errors.Count > 0)
+                .Select(kvp => $"{kvp.Key}: {string.Join(", ", kvp.Value!.Errors.Select(e => e.ErrorMessage))}");
+            _logger.LogWarning("Fuel Create/Edit - ModelState invalid. Errors: {Errors}", string.Join(" | ", errors));
         }
     }
 }

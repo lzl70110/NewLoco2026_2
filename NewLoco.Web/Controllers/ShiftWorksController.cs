@@ -2,32 +2,41 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using GCommon;                                  // Messages
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Logging;
-using NewLoco.Service.Core.Contracts;
-using NewLoco.Web.Auth; // Perm constants
+using Microsoft.Extensions.Options;             // IOptions<T>
+using NewLoco.GCommon.Enums;                    // Shift
+using NewLoco.Service.Core.Contracts;           // services + FuelPoliciesOptions
+using NewLoco.Web.Auth;                         // Perm constants
 using NewLoco.Web.ViewModels.Paging;
 using NewLoco.Web.ViewModels.ShiftWorks;
 
 namespace NewLoco.Web.Controllers
 {
-    // Class-level guard: require read permission for listing and read-only endpoints
     [Authorize(Policy = Perm.ShiftWork.View)]
     public class ShiftWorksController(
         IShiftWorkService shiftService,
         ILocomotiveService locoService,
-        ILogger<ShiftWorksController> logger) : BaseController
+        IFuelService fuelService,
+        IFuelEstimator fuelEstimator,
+        IOptions<FuelPoliciesOptions> policies,
+        ILogger<ShiftWorksController> logger
+    ) : BaseController
     {
-        private readonly IShiftWorkService shiftService = shiftService ?? throw new ArgumentNullException(nameof(shiftService));
-        private readonly ILocomotiveService locoService = locoService ?? throw new ArgumentNullException(nameof(locoService));
-        private readonly ILogger<ShiftWorksController> logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IShiftWorkService _shiftService = shiftService ?? throw new ArgumentNullException(nameof(shiftService));
+        private readonly ILocomotiveService _locoService = locoService ?? throw new ArgumentNullException(nameof(locoService));
+        private readonly IFuelService _fuelService = fuelService ?? throw new ArgumentNullException(nameof(fuelService));
+        private readonly IFuelEstimator _fuelEstimator = fuelEstimator ?? throw new ArgumentNullException(nameof(fuelEstimator));
+        private readonly FuelPoliciesOptions _policies = (policies ?? throw new ArgumentNullException(nameof(policies))).Value
+                                                        ?? throw new ArgumentException(Messages.Fuel.Error_PoliciesNotConfigured);
+        private readonly ILogger<ShiftWorksController> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        // Populate dropdown with locomotives
         private async Task PopulateLocomotivesAsync(ShiftWorksViewModelBase model)
         {
-            var options = await locoService.GetOptionsAsync();
+            var options = await _locoService.GetOptionsAsync();
             model.Locomotives = [.. options
                 .Select(o => new SelectListItem
                 {
@@ -37,12 +46,17 @@ namespace NewLoco.Web.Controllers
                 })];
         }
 
-        // ---------- INDEX (search + paging) ----------
         [HttpGet]
         public async Task<IActionResult> Index([FromQuery] ShiftWorkFilterInput filter, CancellationToken ct)
         {
-            // Only SysAdmin may include deleted via URL
             var allowIncludeDeleted = User.IsInRole("SysAdmin");
+
+            const int DefaultPage = 1;
+            const int DefaultPageSize = 20;
+            const int MaxPageSize = 100;
+
+            var page = filter.Page < 1 ? DefaultPage : filter.Page;
+            var pageSize = filter.PageSize <= 0 ? DefaultPageSize : Math.Min(filter.PageSize, MaxPageSize);
 
             var query = new ShiftWorkQuery
             {
@@ -50,11 +64,11 @@ namespace NewLoco.Web.Controllers
                 From = filter.From,
                 To = filter.To,
                 IncludeDeleted = allowIncludeDeleted && filter.IncludeDeleted,
-                Page = filter.Page < 1 ? 1 : filter.Page,
-                PageSize = filter.PageSize <= 0 ? 20 : filter.PageSize
+                Page = page,
+                PageSize = pageSize
             };
 
-            var (items, total) = await shiftService.GetAllAsync(query, ct);
+            var (items, total) = await _shiftService.GetAllAsync(query, ct);
 
             var rows = items.Select(x => new ShiftWorkListItemViewModel
             {
@@ -79,13 +93,13 @@ namespace NewLoco.Web.Controllers
                     From = filter.From,
                     To = filter.To,
                     IncludeDeleted = query.IncludeDeleted,
-                    Page = query.Page,
-                    PageSize = query.PageSize
+                    Page = page,
+                    PageSize = pageSize
                 },
                 Paging = new PagingInfo
                 {
-                    PageNumber = query.Page,
-                    PageSize = query.PageSize,
+                    PageNumber = page,
+                    PageSize = pageSize,
                     TotalItems = total
                 }
             };
@@ -93,19 +107,18 @@ namespace NewLoco.Web.Controllers
             return View(vm);
         }
 
-        // ---------- CREATE ----------
         [HttpGet]
         [Authorize(Policy = Perm.ShiftWork.Create)]
         public async Task<IActionResult> Create()
         {
-            var vm = shiftService.CreateModel();
+            var vm = _shiftService.CreateModel();
             vm.Date = DateTime.Today;
 
             await PopulateLocomotivesAsync(vm);
 
             if (vm.LocomotiveId != 0)
             {
-                var lastShift = await shiftService.GetLastShiftAsync(vm.LocomotiveId);
+                var lastShift = await _shiftService.GetLastShiftAsync(vm.LocomotiveId);
                 if (lastShift != null)
                 {
                     vm.InitialValue = lastShift.FinalValue;
@@ -119,44 +132,129 @@ namespace NewLoco.Web.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = Perm.ShiftWork.Create)]
-        public async Task<IActionResult> Create(CreateShiftWorkViewModel model)
+        public async Task<IActionResult> CreateStep1(CreateShiftWorkViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 await PopulateLocomotivesAsync(model);
-                return View(model);
+                return View("Create", model);
+            }
+
+            var hours = model.FinalValue - model.InitialValue;
+            if (hours <= 0)
+            {
+                ModelState.AddModelError(nameof(model.FinalValue), Messages.ShiftWork.Error_FinalGreaterThanInitial);
+                await PopulateLocomotivesAsync(model);
+                return View("Create", model);
+            }
+
+            var locoType = await _locoService.GetTypeAsync(model.LocomotiveId);
+            var est = _fuelEstimator.EstimateDefault(locoType, hours);
+            var suggestedLiters = est.SuggestedLiters < 0 ? 0 : est.SuggestedLiters;
+
+            var confirm = new ConfirmFuelViewModel
+            {
+                LocomotiveId = model.LocomotiveId,
+                Date = model.Date == default ? DateTime.Today : model.Date,
+                Shift = model.Shift,
+                InitialValue = model.InitialValue,
+                FinalValue = model.FinalValue,
+                Note = model.Note,
+                Hours = hours,
+                LocomotiveType = locoType,
+                FuelLiters = suggestedLiters,
+                PolicyMinLph = est.PolicyMinLph,
+                FullLoadHint = est.PolicyFullHint
+            };
+
+            // ---------- Soft warning (pre-commit) ----------
+            var current = await _fuelService.GetCurrentStockAsync(model.LocomotiveId);
+            var projectedFinal = current - (confirm.FuelLiters <= 0 ? 0 : confirm.FuelLiters);
+
+            var cls = await GetClassCodeAsync(model.LocomotiveId);
+            if (!string.IsNullOrWhiteSpace(cls) &&
+                _policies.PerClassSafety != null &&
+                _policies.PerClassSafety.TryGetValue(cls, out var safety) &&
+                safety != null &&
+                projectedFinal < safety.SoftWarningLiters &&
+                projectedFinal >= safety.HardFloorLiters)
+            {
+                TempData[Messages.TempDataKeys.Warning] =
+                    string.Format(Messages.Fuel.Warn_FinalBelowSoftFmt, safety.SoftWarningLiters);
+            }
+            // ------------------------------------------------
+
+            return View("ConfirmFuel", confirm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Policy = Perm.ShiftWork.Create)]
+        public async Task<IActionResult> CreateCommit(ConfirmFuelViewModel vm)
+        {
+            if (!ModelState.IsValid) return View("ConfirmFuel", vm);
+
+            var hint = vm.FullLoadHint <= 0 ? 1m : vm.FullLoadHint;
+            var hours = vm.Hours <= 0 ? 0 : vm.Hours;
+            var maxAllowed = hint * hours * 1.5m;
+
+            if (vm.FuelLiters > maxAllowed)
+            {
+                ModelState.AddModelError(nameof(vm.FuelLiters),
+                    string.Format(Messages.ShiftWork.Error_FuelTooHighFmt, hours));
+                return View("ConfirmFuel", vm);
+            }
+
+            // Round to whole liters and validate 10 L depot step
+            var liters = (int)Math.Round(vm.FuelLiters, 0, MidpointRounding.AwayFromZero);
+            if (liters % 10 != 0)
+            {
+                ModelState.AddModelError(nameof(vm.FuelLiters),
+                    Messages.FuelServiceKeys.Msg_FuelAmountMustBeMultipleOf10);
+                return View("ConfirmFuel", vm);
             }
 
             var user = User?.Identity?.Name ?? "system";
-            model.Date = model.Date == default ? DateTime.Today : model.Date;
 
             try
             {
-                await shiftService.CreateAsync(model, user);
-                TempData["Success"] = "ShiftWork created.";
+                var createVm = new CreateShiftWorkViewModel
+                {
+                    LocomotiveId = vm.LocomotiveId,
+                    Date = vm.Date,
+                    Shift = vm.Shift,
+                    InitialValue = vm.InitialValue,
+                    FinalValue = vm.FinalValue,
+                    Note = vm.Note
+                };
+
+                await _shiftService.CreateAsync(createVm, user);
+
+                // consume on exact date/shift (uses the new service API)
+                if (liters > 0)
+                    await _fuelService.ConsumeOnAsync(vm.LocomotiveId, vm.Date, vm.Shift, liters, user);
+
+                TempData[Messages.TempDataKeys.Success] = Messages.ShiftWork.Info_ShiftFuelRecorded;
                 return RedirectToAction(nameof(Index));
             }
             catch (InvalidOperationException ex)
             {
                 ModelState.AddModelError(string.Empty, ex.Message);
-                await PopulateLocomotivesAsync(model);
-                return View(model);
+                return View("ConfirmFuel", vm);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Create ShiftWork failed");
-                TempData["Error"] = "Failed to create shift work.";
-                await PopulateLocomotivesAsync(model);
-                return View(model);
+                _logger.LogError(ex, "CreateCommit failed");
+                TempData[Messages.TempDataKeys.Error] = Messages.ShiftWork.Error_ShiftSaveFailed;
+                return View("ConfirmFuel", vm);
             }
         }
 
-        // ---------- EDIT ----------
         [HttpGet]
         [Authorize(Policy = Perm.ShiftWork.Edit)]
         public async Task<IActionResult> Edit(int id)
         {
-            var vm = shiftService.GetForEdit(id);
+            var vm = _shiftService.GetForEdit(id);
             if (vm == null) return NotFound();
 
             await PopulateLocomotivesAsync(vm);
@@ -180,8 +278,8 @@ namespace NewLoco.Web.Controllers
 
             try
             {
-                await shiftService.EditAsync(id, model, user);
-                TempData["Success"] = "ShiftWork updated.";
+                await _shiftService.EditAsync(id, model, user);
+                TempData[Messages.TempDataKeys.Success] = Messages.ShiftWork.Info_ShiftUpdated;
                 return RedirectToAction(nameof(Index));
             }
             catch (InvalidOperationException ex)
@@ -192,14 +290,13 @@ namespace NewLoco.Web.Controllers
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Edit ShiftWork failed for id {Id}", id);
-                TempData["Error"] = "Failed to update shift work.";
+                _logger.LogError(ex, "Edit ShiftWork failed for id {Id}", id);
+                TempData[Messages.TempDataKeys.Error] = Messages.ShiftWork.Error_ShiftUpdateFailed;
                 await PopulateLocomotivesAsync(model);
                 return View(model);
             }
         }
 
-        // ---------- DELETE ----------
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = Perm.ShiftWork.Delete)]
@@ -209,19 +306,18 @@ namespace NewLoco.Web.Controllers
 
             try
             {
-                await shiftService.DeleteAsync(id, user);
-                TempData["Success"] = "ShiftWork deleted.";
+                await _shiftService.DeleteAsync(id, user);
+                TempData[Messages.TempDataKeys.Success] = Messages.ShiftWork.Info_ShiftDeleted;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Delete ShiftWork failed for id {Id}", id);
-                TempData["Error"] = "Failed to delete shift work.";
+                _logger.LogError(ex, "Delete ShiftWork failed for id {Id}", id);
+                TempData[Messages.TempDataKeys.Error] = Messages.ShiftWork.Error_ShiftDeleteFailed;
             }
 
             return RedirectToAction(nameof(Index));
         }
 
-        // ---------- UNDO DELETE ----------
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Policy = Perm.ShiftWork.Delete)]
@@ -231,16 +327,29 @@ namespace NewLoco.Web.Controllers
 
             try
             {
-                await shiftService.UndoDeleteAsync(id, user);
-                TempData["Success"] = "ShiftWork restored.";
+                await _shiftService.UndoDeleteAsync(id, user);
+                TempData[Messages.TempDataKeys.Success] = Messages.ShiftWork.Info_ShiftRestored;
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Undo delete ShiftWork failed for id {Id}", id);
-                TempData["Error"] = "Failed to restore shift work.";
+                _logger.LogError(ex, "Undo delete ShiftWork failed for id {Id}", id);
+                TempData[Messages.TempDataKeys.Error] = Messages.ShiftWork.Error_ShiftRestoreFailed;
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // ---------- helpers ----------
+
+        // Resolve class code ("52", "55", "06") from locomotive number "52-xxx"
+        private async Task<string> GetClassCodeAsync(int locomotiveId)
+        {
+            var opts = await _locoService.GetOptionsAsync();
+            var number = opts.FirstOrDefault(o => o.Id == locomotiveId)?.Number?.Trim();
+            if (string.IsNullOrWhiteSpace(number)) return string.Empty;
+            var part = number.Split('-', 2, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                             .FirstOrDefault();
+            return part ?? string.Empty;
         }
     }
 }

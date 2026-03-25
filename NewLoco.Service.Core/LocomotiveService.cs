@@ -1,136 +1,151 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using NewLoco.Data;
 using NewLoco.Data.Models;
-using NewLoco.Service.Core.Contracts;
-using  NewLoco.Service.Core;
+using NewLoco.Service.Core.Contracts;     // DTOs + interface
+using NewLoco.GCommon.Enums;
 
-using  NewLoco.GCommon.Enums;
-
-namespace NewLoco.Service.Core;
-
-public class LocomotiveService(LocoDbContext db) : ILocomotiveService
+namespace NewLoco.Service.Core
+{
+    public class LocomotiveService(LocoDbContext db) : ILocomotiveService
     {
-    private readonly LocoDbContext _db = db;
+        private readonly LocoDbContext _db = db;
 
-    // List with filter: "deleted" | "all" | default (only active)
-    public async Task<IEnumerable<LocoNumberDto>> GetAllAsync(string? filter)
+        // List with filter: "deleted" | "all" | default (only active)
+        public async Task<IEnumerable<LocoNumberDto>> GetAllAsync(string? filter)
         {
-        var query = _db.Locomotives.AsQueryable();
+            var query = _db.Locomotives.AsQueryable();
 
-        query = filter switch
+            query = filter switch
             {
                 "deleted" => query.Where(l => l.IsDeleted),
                 "all" => query,
                 _ => query.Where(l => !l.IsDeleted)
-                };
-
-        return await query
-            .AsNoTracking()
-            .OrderBy(l => l.Number)
-            .Select(l => new LocoNumberDto(
-                l.Id, l.Number,
-                l.LocomotiveType,
-                l.MeasuringUnit,
-                l.IsDeleted,
-                l.Note))
-            .ToListAsync();
-        }
-
-    // Details
-    public async Task<LocoDetailsDto?> GetDetailsAsync(int id)
-        {
-        var e = await _db.Locomotives.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-        if (e == null) return null;
-
-        return new LocoDetailsDto(
-            e.Id,
-            e.Number, 
-            e.LocomotiveType,
-            e.MeasuringUnit,
-            e.Note ?? string.Empty,
-            e.IsDeleted,
-            e.CreatedOn, 
-            e.CreatedBy, 
-            e.ModifiedOn,
-            e.ModifiedBy);
-        }
-
-    // Load for edit
-    public async Task<LocomotiveFormDto?> GetForEditAsync(int id)
-        {
-        var e = await _db.Locomotives.FindAsync(id);
-        if (e == null) return null;
-
-        return new LocomotiveFormDto(e.Number, e.LocomotiveType, e.MeasuringUnit, e.Note);
-        }
-
-    // Create
-    public async Task CreateAsync(LocomotiveFormDto model, string user)
-        {
-        var e = new Locomotive
-            {
-            Number = model.Number,
-            LocomotiveType = model.LocomotiveType,
-            MeasuringUnit = model.MeasuringUnit,
-            Note = model.Note,
-            IsDeleted = false,
-            CreatedOn = DateTime.UtcNow,
-            CreatedBy = user
             };
 
-        _db.Locomotives.Add(e);
-        await _db.SaveChangesAsync();
+            return await query
+                .AsNoTracking()
+                .OrderBy(l => l.Number)
+                .Select(l => new LocoNumberDto(
+                    l.Id, l.Number,
+                    l.LocomotiveType,
+                    l.MeasuringUnit,
+                    l.IsDeleted,
+                    l.Note))
+                .ToListAsync();
         }
 
-    // Edit
-    public async Task EditAsync(int id, LocomotiveFormDto model, string user)
+        // Details
+        public async Task<LocoDetailsDto?> GetDetailsAsync(int id)
         {
-        var e = await _db.Locomotives.FindAsync(id);
-        if (e == null) return;
+            var e = await _db.Locomotives
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
 
-        e.Number = model.Number;
-        e.LocomotiveType = model.LocomotiveType;
-        e.MeasuringUnit = model.MeasuringUnit;
-        e.Note = model.Note;
-        e.ModifiedOn = DateTime.UtcNow;
-        e.ModifiedBy = user;
+            if (e == null) return null;
 
-        await _db.SaveChangesAsync();
+            return new LocoDetailsDto(
+                e.Id,
+                e.Number,
+                e.LocomotiveType,
+                e.MeasuringUnit,
+                e.Note ?? string.Empty,
+                e.IsDeleted,
+                e.CreatedOn,
+                e.CreatedBy,
+                e.ModifiedOn,
+                e.ModifiedBy);
         }
 
-    // Soft-delete
-    public async Task DeleteAsync(int id, string user)
+        // Load for edit
+        public async Task<LocomotiveFormDto?> GetForEditAsync(int id)
         {
-        var e = await _db.Locomotives.FindAsync(id);
-        if (e == null || e.IsDeleted) return;
+            var e = await _db.Locomotives.FindAsync(id);
+            if (e == null) return null;
 
-        e.IsDeleted = true;
-        e.ModifiedOn = DateTime.UtcNow;
-        e.ModifiedBy = user;
-
-        await _db.SaveChangesAsync();
+            return new LocomotiveFormDto(e.Number, e.LocomotiveType, e.MeasuringUnit, e.Note);
         }
 
-    // Undo soft-delete
-    public async Task UndeleteAsync(int id, string user)
+        // Create
+        public async Task CreateAsync(LocomotiveFormDto model, string user)
         {
-        var e = await _db.Locomotives.FindAsync(id);
-        if (e == null || !e.IsDeleted) return;
+            var e = new Locomotive
+            {
+                Number = model.Number,
+                LocomotiveType = model.LocomotiveType,
+                MeasuringUnit = model.MeasuringUnit,
+                Note = model.Note,
+                IsDeleted = false,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = user
+            };
 
-        e.IsDeleted = false;
-        e.ModifiedOn = DateTime.UtcNow;
-        e.ModifiedBy = user;
-
-        await _db.SaveChangesAsync();
+            _db.Locomotives.Add(e);
+            await _db.SaveChangesAsync();
         }
 
-    // Options for dropdowns (DTO)
-    public async Task<IEnumerable<LocoOptionDto>> GetOptionsAsync()
-        => await _db.Locomotives
-            .AsNoTracking()
-            .Where(l => !l.IsDeleted)
-            .OrderBy(l => l.Number)
-            .Select(l => new LocoOptionDto(l.Id, l.Number))
-            .ToListAsync();
+        // Edit
+        public async Task EditAsync(int id, LocomotiveFormDto model, string user)
+        {
+            var e = await _db.Locomotives.FindAsync(id);
+            if (e == null) return;
+
+            e.Number = model.Number;
+            e.LocomotiveType = model.LocomotiveType;
+            e.MeasuringUnit = model.MeasuringUnit;
+            e.Note = model.Note;
+            e.ModifiedOn = DateTime.UtcNow;
+            e.ModifiedBy = user;
+
+            await _db.SaveChangesAsync();
+        }
+
+        // Soft-delete
+        public async Task DeleteAsync(int id, string user)
+        {
+            var e = await _db.Locomotives.FindAsync(id);
+            if (e == null || e.IsDeleted) return;
+
+            e.IsDeleted = true;
+            e.ModifiedOn = DateTime.UtcNow;
+            e.ModifiedBy = user;
+
+            await _db.SaveChangesAsync();
+        }
+
+        // Undo soft-delete
+        public async Task UndeleteAsync(int id, string user)
+        {
+            var e = await _db.Locomotives.FindAsync(id);
+            if (e == null || !e.IsDeleted) return;
+
+            e.IsDeleted = false;
+            e.ModifiedOn = DateTime.UtcNow;
+            e.ModifiedBy = user;
+
+            await _db.SaveChangesAsync();
+        }
+
+        // Options for dropdowns (DTO)
+        public async Task<IEnumerable<LocoOptionDto>> GetOptionsAsync()
+            => await _db.Locomotives
+                .AsNoTracking()
+                .Where(l => !l.IsDeleted)
+                .OrderBy(l => l.Number)
+                .Select(l => new LocoOptionDto(l.Id, l.Number))
+                .ToListAsync();
+
+        // change: implements interface member; tiny read with AsNoTracking
+        public async Task<LocomotiveType> GetTypeAsync(int locomotiveId)
+        {
+            var type = await _db.Locomotives
+                .AsNoTracking()
+                .Where(l => l.Id == locomotiveId)
+                .Select(l => l.LocomotiveType)
+                .FirstOrDefaultAsync(); // safe default if not found
+
+            return type;
+        }
     }
+}

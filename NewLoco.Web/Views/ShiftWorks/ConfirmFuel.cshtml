@@ -1,0 +1,79 @@
+﻿@model NewLoco.Web.ViewModels.ShiftWorks.ConfirmFuelViewModel
+@using GCommon
+@{
+    ViewData["Title"] = "Confirm fuel";
+}
+
+<h5 class="mb-3">Confirm fuel consumption</h5>
+
+@* Soft warning (non-blocking): from TempData set in CreateStep1 *@
+@if (TempData[Messages.TempDataKeys.Warning] is string warn && !string.IsNullOrWhiteSpace(warn))
+{
+    <div class="alert alert-warning py-2" role="alert">
+        <span class="me-1">⚠️</span> @warn
+    </div>
+}
+
+@* Validation summary (server-side) *@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger" role="alert">
+        <div asp-validation-summary="ModelOnly"></div>
+    </div>
+}
+
+<div class="alert alert-secondary py-2 small">
+    <div><strong>Loco:</strong> @Model.LocomotiveId (@Model.LocomotiveType)</div>
+    <div><strong>Date/Shift:</strong> @Model.Date.ToString("dd.MM.yyyy") / @Model.Shift</div>
+    <div><strong>Hours:</strong> @Model.Hours</div>
+    <div><strong>Policy:</strong> min @Model.PolicyMinLph l/h, full-load hint @Model.FullLoadHint l/h</div>
+</div>
+
+<form asp-action="CreateCommit" method="post" novalidate>
+    @Html.AntiForgeryToken()
+
+    <!-- carry-through hidden fields -->
+    <input type="hidden" asp-for="LocomotiveId" />
+    <input type="hidden" asp-for="Date" />
+    <input type="hidden" asp-for="Shift" />
+    <input type="hidden" asp-for="InitialValue" />
+    <input type="hidden" asp-for="FinalValue" />
+    <input type="hidden" asp-for="Note" />
+
+    <input type="hidden" asp-for="Hours" />
+    <input type="hidden" asp-for="LocomotiveType" />
+    <input type="hidden" asp-for="PolicyMinLph" />
+    <input type="hidden" asp-for="FullLoadHint" />
+
+    <div class="row g-2">
+        <div class="col-sm-4">
+            <label asp-for="FuelLiters" class="form-label">Fuel to consume (liters)</label>
+            <div class="input-group">
+                <input asp-for="FuelLiters"
+                       type="number"
+                       class="form-control"
+                       inputmode="numeric"
+                       min="0"
+                       step="10" />
+                <span class="input-group-text">L</span>
+            </div>
+            <span asp-validation-for="FuelLiters" class="text-danger"></span>
+            <div class="form-text">
+                Suggested: @Model.PolicyMinLph l/h × @Model.Hours h = @Model.FuelLiters l
+                <br />
+                Depot rule: amounts must be multiples of 10 L (enforced on save).
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <a asp-action="Create" class="btn btn-outline-secondary btn-sm">Back</a>
+        <button type="submit" class="btn btn-primary btn-sm">
+            Confirm &amp; Save
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="~/Areas/Identity/Pages/_ValidationScriptsPartial.cshtml" />
+}

@@ -28,4 +28,14 @@ namespace NewLoco.Service.Core.Contracts
         public string? Note { get; set; }
         public bool IsDeleted { get; set; }
     }
+
+    // change: add create DTO used by service/controller
+    public record ShiftWorkCreateDto(
+        int LocomotiveId,
+        DateTime Date,
+        Shift Shift,
+        decimal InitialValue,
+        decimal FinalValue,
+        string? Note
+    );
 }

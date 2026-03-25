@@ -88,6 +88,8 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   ├───Migrations
 │   │       20260313195356_InitialMigration.cs
 │   │       20260313195356_InitialMigration.Designer.cs
+│   │       20260325045950_ShiftWorkUpdate.cs
+│   │       20260325045950_ShiftWorkUpdate.Designer.cs
 │   │       LocoDbContextModelSnapshot.cs
 │   │       
 │   ├───Model
@@ -172,6 +174,7 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │                       NewLoco.Data.Models.dll
 │                       
 ├───NewLoco.Service.Core
+│   │   FuelEstimator.cs
 │   │   FuelService.cs
 │   │   LocomotiveService.cs
 │   │   NewLoco.Service.Core.csproj
@@ -193,11 +196,14 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │               NewLoco.Web.ViewModels.pdb
 │   │               
 │   ├───Contracts
+│   │       FuelPoliciesOptions.cs
+│   │       IFuelEstimator.cs
 │   │       IFuelService.cs
 │   │       ILocomotiveService.cs
 │   │       IShiftWorkService.cs
 │   │       LocomotiveDtos.cs
 │   │       ShiftWorkDto.cs
+│   │       ShiftWorkQuery.cs
 │   │       
 │   └───obj
 │       │   NewLoco.Service.Core.csproj.nuget.dgspec.json
@@ -1229,6 +1235,7 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │   │       _ValidationScriptsPartial.cshtml
 │   │   │       
 │   │   └───ShiftWorks
+│   │           ConfirmFuel.cshtml
 │   │           Create.cshtml
 │   │           Edit.cshtml
 │   │           Index.cshtml
@@ -1378,9 +1385,16 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │           └───refint
 │   │                   NewLoco.Web.ViewModels.dll
 │   │                   
+│   ├───Paging
+│   │       PagingInfo.cs
+│   │       
 │   └───ShiftWorks
+│           ConfirmFuelViewModel.cs
 │           CreateShiftWorkViewModel.cs
 │           EditShiftWorkViewModel.cs
+│           ShiftWorkFilterInput.cs
+│           ShiftWorkIndexViewModel.cs
+│           ShiftWorkListItemViewModel.cs
 │           ShiftWorksViewModel.cs
 │           ShiftWorksViewModelBase.cs
 │           

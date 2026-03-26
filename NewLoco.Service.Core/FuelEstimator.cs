@@ -8,21 +8,27 @@ namespace NewLoco.Service.Core
 {
     public sealed class FuelEstimator(IOptions<FuelPoliciesOptions> policies) : IFuelEstimator
     {
-        private readonly FuelPoliciesOptions _policies = (policies ?? throw new ArgumentNullException(nameof(policies))).Value
-                        ?? throw new ArgumentException(Error_PoliciesNotConfigured);
+        private readonly FuelPoliciesOptions _policies =
+            (policies ?? throw new ArgumentNullException(nameof(policies))).Value
+            ?? throw new ArgumentException(Error_PoliciesNotConfigured);
 
-        public FuelEstimate EstimateDefault(LocomotiveType type, decimal hours)
+        public FuelEstimate EstimateDefault(LocomotiveType type, decimal amount, MeasuringUnits unit)
         {
-            if (hours <= 0)
+            // Km → manual fuel entry only
+            if (unit == MeasuringUnits.Km)
+                return new FuelEstimate(0m, 0m, 0m);
+
+            // Mh → automatic estimation
+            if (amount <= 0)
                 return new FuelEstimate(0m, 0m, 0m);
 
             var p = (type == LocomotiveType.Shunter ? _policies.Shunter : _policies.Mainline)
-                    ?? throw new InvalidOperationException(string.Format(Error_PolicyMissingFmt, type)); // changed
+                ?? throw new InvalidOperationException(string.Format(Error_PolicyMissingFmt, type));
 
-            var minLph = Math.Max(p.MinIdleLph, p.MinLoadLph);
-            var liters = Math.Round(minLph * hours, 1, MidpointRounding.AwayFromZero);
+            var rate = Math.Max(p.MinIdleLph, p.MinLoadLph);
+            var liters = Math.Round(rate * amount, 1, MidpointRounding.AwayFromZero);
 
-            return new FuelEstimate(liters, minLph, p.FullLoadLphHint);
+            return new FuelEstimate(liters, rate, p.FullLoadLphHint);
         }
     }
 }

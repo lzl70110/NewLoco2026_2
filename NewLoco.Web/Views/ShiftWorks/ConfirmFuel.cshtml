@@ -23,10 +23,18 @@
 }
 
 <div class="alert alert-secondary py-2 small">
-    <div><strong>Loco:</strong> @Model.LocomotiveId (@Model.LocomotiveType)</div>
-    <div><strong>Date/Shift:</strong> @Model.Date.ToString("dd.MM.yyyy") / @Model.Shift</div>
-    <div><strong>Hours:</strong> @Model.Hours</div>
-    <div><strong>Policy:</strong> min @Model.PolicyMinLph l/h, full-load hint @Model.FullLoadHint l/h</div>
+    <div><strong>Locomotive № </strong> @Model.LocomotiveNumber </div>
+    <div>
+        @if (Model.MeasuringUnits == NewLoco.GCommon.Enums.MeasuringUnits.Km)
+        {
+            <text>Kilometers: @Model.Hours km</text>
+        }
+        else
+        {
+            <text>Hours: @Model.Hours mh</text>
+        }
+    </div>
+   @*  <div><strong>Policy:</strong> min @Model.PolicyMinLph l/h, full-load hint @Model.FullLoadHint l/h</div> *@
 </div>
 
 <form asp-action="CreateCommit" method="post" novalidate>

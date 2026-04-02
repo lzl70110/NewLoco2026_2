@@ -1,0 +1,143 @@
+﻿@model List<NewLoco.Web.ViewModels.Axles.AxleMeasurementValueViewModel>
+
+@{
+    ViewData.TemplateInfo.HtmlFieldPrefix = "Axles";
+}
+
+<table class="table table-bordered table-sm text-center">
+    <thead class="table-light">
+        <tr>
+            <th>Axle</th>
+            <th>Sd Left</th>
+            <th>Sd Right</th>
+            <th>Sh Left</th>
+            <th>Sh Right</th>
+            <th>qR Left</th>
+            <th>qR Right</th>
+            <th>Ar</th>
+            <th>Sr</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <tr>
+                <td>@Model[i].AxleNumber</td>
+
+                <td>
+                    <input asp-for="@Model[i].Sd_Left"
+                           class="form-control form-control-sm"
+                           data-field="Sd_Left"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].Sd_Left" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].Sd_Right"
+                           class="form-control form-control-sm"
+                           data-field="Sd_Right"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].Sd_Right" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].Sh_Left"
+                           class="form-control form-control-sm"
+                           data-field="Sh_Left"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].Sh_Left" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].Sh_Right"
+                           class="form-control form-control-sm"
+                           data-field="Sh_Right"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].Sh_Right" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].QR_Left"
+                           class="form-control form-control-sm"
+                           data-field="QR_Left"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].QR_Left" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].QR_Right"
+                           class="form-control form-control-sm"
+                           data-field="QR_Right"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].QR_Right" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].Ar"
+                           class="form-control form-control-sm"
+                           data-field="Ar"
+                           inputmode="decimal" />
+                    <span asp-validation-for="@Model[i].Ar" class="text-danger small"></span>
+                </td>
+
+                <td>
+                    <input asp-for="@Model[i].Sr"
+                           class="form-control form-control-sm"
+                           data-field="Sr"
+                           readonly />
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script>
+    // Convert comma to dot BEFORE browser validation sees it
+    document.addEventListener("keydown", function (e) {
+        if (!e.target.matches("[data-field]")) return;
+        if (e.key === ",") {
+            e.preventDefault();
+            const input = e.target;
+            const pos = input.selectionStart;
+            input.value = input.value.slice(0, pos) + "." + input.value.slice(input.selectionEnd);
+            input.selectionStart = input.selectionEnd = pos + 1;
+        }
+    });
+
+    // Convert comma on paste BEFORE validation
+    document.addEventListener("beforeinput", function (e) {
+        if (!e.target.matches("[data-field]")) return;
+        if (e.data === ",") {
+            e.preventDefault();
+            const input = e.target;
+            const pos = input.selectionStart;
+            input.value = input.value.slice(0, pos) + "." + input.value.slice(input.selectionEnd);
+            input.selectionStart = input.selectionEnd = pos + 1;
+        }
+    });
+
+    // Cleanup AFTER input
+    document.addEventListener("input", function (e) {
+        if (!e.target.matches("[data-field]")) return;
+
+        let v = e.target.value;
+
+        v = v.replace(/[^0-9.]/g, "");
+
+        const dot = v.indexOf(".");
+        if (dot !== -1)
+            v = v.slice(0, dot + 1) + v.slice(dot + 1).replace(/\./g, "");
+
+        e.target.value = v;
+
+        const row = e.target.closest("tr");
+        if (row) calcSr(row);
+    });
+
+    function calcSr(row) {
+        const val = f => parseFloat(row.querySelector(`[data-field='${f}']`).value) || 0;
+        const sr = val("Ar") + val("Sd_Left") + val("Sd_Right");
+        row.querySelector("[data-field='Sr']").value = sr.toFixed(2);
+    }
+</script>

@@ -51,4 +51,21 @@ public static class EntityValidationConstants
     { 
         public const int LabelMaxLength = 50;
     }
+    public static class Axle
+    {
+        public const double ArMin = 1357;
+        public const double ArMax = 1363;
+
+        public const double ShMin = 25;
+        public const double ShMax = 36;
+
+        public const double SdMin = 22;
+        public const double  SdMax = 33.15;
+
+        public const double QRMin = 6.5;
+        public const double QRMax = 22;
+
+        public const double SrMin = 22;
+        public const double SrMax = 22;
+    }
 }

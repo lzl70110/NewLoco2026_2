@@ -1,23 +1,25 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using NewLoco.GCommon.Enums;
-using static NewLoco.GCommon.EntityValidationConstants.Locomotive;
-using static NewLoco.GCommon.EntityValidationConstants.BaseEntity;
 
-namespace NewLoco.Web.ViewModels.Locomotives
-    {
-    public class CreateLocomotiveViewModel
-        {
-        [Required]
-        [StringLength(LocomotiveNumberLength)]
-        public string Number { get; set; } = null!;
+namespace NewLoco.Web.ViewModels.Locomotives;
 
-        [Required]
-        public LocomotiveType LocomotiveType { get; set; } = LocomotiveType.Shunter;
+public class CreateLocomotiveViewModel : LocomotiveFormModel
+{
+    public IEnumerable<SelectListItem> LocomotiveTypes { get; set; } =
+        Enum.GetValues(typeof(LocomotiveType))
+            .Cast<LocomotiveType>()
+            .Select(x => new SelectListItem
+            {
+                Text = x.ToString(),
+                Value = ((int)x).ToString()
+            });
 
-        [Required]
-        public MeasuringUnits MeasuringUnit { get; set; } = MeasuringUnits.Mh;
-
-        [StringLength(NoteMaxLength, MinimumLength = NoteMinLength)]
-        public string? Note { get; set; }
-        }
-    }
+    public IEnumerable<SelectListItem> MeasuringUnitsList { get; set; } =
+        Enum.GetValues(typeof(MeasuringUnits))
+            .Cast<MeasuringUnits>()
+            .Select(x => new SelectListItem
+            {
+                Text = x.ToString(),
+                Value = ((int)x).ToString()
+            });
+}

@@ -1,0 +1,98 @@
+﻿@model NewLoco.Web.ViewModels.Axles.AxleMeasurementCardViewModel
+
+@{
+    ViewData["Title"] = "Edit Axle Measurement Card";
+}
+
+<h2 class="mb-4">Edit Axle Measurement Card</h2>
+
+<form asp-action="Edit" method="post">
+    <input type="hidden" asp-for="Id" />
+    <input type="hidden" asp-for="SelectedLocomotiveId" />
+    <input type="hidden" asp-for="AxlesCount" />
+    <input type="hidden" asp-for="MeasurementDate" />
+
+    <!-- Document number -->
+    <div class="mb-3">
+        <label asp-for="Id" class="form-label">Document</label>
+        <input class="form-control" value="@Model.Id" disabled />
+    </div>
+
+    <!-- Date -->
+    <div class="mb-3">
+        <label class="form-label">Date</label>
+        <input class="form-control" value="@Model.MeasurementDate.ToShortDateString()" disabled />
+    </div>
+
+    <h4 class="mt-4">Axle Measurements</h4>
+
+    <table class="table table-bordered align-middle mt-3 text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Axle</th>
+                <th>Sd Left</th>
+                <th>Sd Right</th>
+                <th>Sh Left</th>
+                <th>Sh Right</th>
+                <th>qR Left</th>
+                <th>qR Right</th>
+                <th>Ar</th>
+                <th>Sr</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Axles.Count; i++)
+            {
+                <tr>
+                    <td>
+                        @Model.Axles[i].AxleNumber
+                        <input type="hidden" asp-for="Axles[i].AxleNumber" />
+                    </td>
+                    <td><input asp-for="Axles[i].Sd_Left" class="form-control sd-input" /></td>
+                    <td><input asp-for="Axles[i].Sd_Right" class="form-control sd-input" /></td>
+                    <td><input asp-for="Axles[i].Sh_Left" class="form-control" /></td>
+                    <td><input asp-for="Axles[i].Sh_Right" class="form-control" /></td>
+                    <td><input asp-for="Axles[i].QR_Left" class="form-control" /></td>
+                    <td><input asp-for="Axles[i].QR_Right" class="form-control" /></td>
+                    <td><input asp-for="Axles[i].Ar" class="form-control ar-input" /></td>
+                    <td><input asp-for="Axles[i].Sr" class="form-control sr-output" readonly /></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <a asp-action="Index" asp-controller="AxleMeasurements" class="btn btn-secondary">Cancel</a>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Get all rows in the axle measurements table
+            const rows = document.querySelectorAll("table tbody tr");
+
+            rows.forEach(row => {
+                const sdLeft = row.querySelector("input[name$='.Sd_Left']");
+                const sdRight = row.querySelector("input[name$='.Sd_Right']");
+                const ar = row.querySelector("input[name$='.Ar']");
+                const sr = row.querySelector("input[name$='.Sr']");
+
+                // Function to recalculate Sr
+                const calculateSr = () => {
+                    const valAr = parseFloat(ar.value) || 0;
+                    const valSdL = parseFloat(sdLeft.value) || 0;
+                    const valSdR = parseFloat(sdRight.value) || 0;
+                    sr.value = valAr + valSdL + valSdR;
+                };
+
+                // Listen for input changes on Ar, Sd_Left, and Sd_Right
+                [sdLeft, sdRight, ar].forEach(input => {
+                    input.addEventListener("input", calculateSr);
+                });
+
+                // Initial calculation on page load
+                calculateSr();
+            });
+        });
+    </script>
+}

@@ -22,5 +22,7 @@ namespace NewLoco.Web.ViewModels.Locomotives
 
         [StringLength (NoteMaxLength, MinimumLength = NoteMinLength)]
         public string? Note { get; set; }
+
+        public int AxlesCount { get; set; }
         }
     }

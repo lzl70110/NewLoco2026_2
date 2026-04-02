@@ -8,7 +8,7 @@
     var currentController = (ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty);
     var currentAction = (ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty);
 
-    // RBAC guards (null-safe)
+    // RBAC guards
     var isAuth = User?.Identity?.IsAuthenticated == true;
     var hasAnyPermission = isAuth && (User?.Claims?.Any(c => c.Type == Perm.ClaimType) ?? false);
 
@@ -19,6 +19,8 @@
     var canShiftCreate = false;
     var canAdminRoles = false;
     var canAdminUsers = false;
+    var canRepairsView = false;      // NEW
+    var canRepairsCreate = false;    // NEW
 
     // Evaluate policies concurrently
     if (hasAnyPermission)
@@ -32,7 +34,16 @@
         var tAdminRoles = AuthorizationService.AuthorizeAsync(principal, policyName: Perm.Admin.Roles.Read);
         var tAdminUsers = AuthorizationService.AuthorizeAsync(principal, policyName: Perm.Admin.Users.Read);
 
-        await Task.WhenAll(tFuelView, tFuelCreate, tShiftView, tShiftCreate, tAdminRoles, tAdminUsers);
+        // NEW Repairs permissions
+        var tRepairsView = AuthorizationService.AuthorizeAsync(principal, policyName: Perm.Repairs.View);
+        var tRepairsCreate = AuthorizationService.AuthorizeAsync(principal, policyName: Perm.Repairs.Create);
+
+        await Task.WhenAll(
+            tFuelView, tFuelCreate,
+            tShiftView, tShiftCreate,
+            tAdminRoles, tAdminUsers,
+            tRepairsView, tRepairsCreate
+        );
 
         canFuelView = tFuelView.Result.Succeeded;
         canFuelCreate = tFuelCreate.Result.Succeeded;
@@ -40,6 +51,9 @@
         canShiftCreate = tShiftCreate.Result.Succeeded;
         canAdminRoles = tAdminRoles.Result.Succeeded;
         canAdminUsers = tAdminUsers.Result.Succeeded;
+
+        canRepairsView = tRepairsView.Result.Succeeded;      // NEW
+        canRepairsCreate = tRepairsCreate.Result.Succeeded;  // NEW
     }
 
     bool IsActive(string controller, string action, string? area = null)
@@ -47,7 +61,7 @@
            && currentAction.Equals(action, StringComparison.OrdinalIgnoreCase)
            && (area is null || currentArea.Equals(area, StringComparison.OrdinalIgnoreCase));
 
-    // Accordion open-state
+    // Accordion open state
     var inAdminSection =
         hasAnyPermission &&
         (
@@ -61,29 +75,30 @@
                     && currentController.Equals("Fuels", StringComparison.OrdinalIgnoreCase);
     var shiftOpen = hasAnyPermission && canShiftView
                     && currentController.Equals("ShiftWorks", StringComparison.OrdinalIgnoreCase);
+    var repairsOpen = hasAnyPermission && canRepairsView
+                    && currentController.Equals("AxleMeasurements", StringComparison.OrdinalIgnoreCase);
 
     // Unique IDs per render
     var uid = Guid.NewGuid().ToString("N");
     var adminId = $"accAdmin_{uid}";
     var fuelId = $"accFuel_{uid}";
     var shiftId = $"accShift_{uid}";
+    var repairsId = $"accRepairs_{uid}";
 }
 
-@* -------- Public-only link (no permissions) -------- *@
 @if (!hasAnyPermission)
 {
     <a asp-area=""
        asp-controller="PublicLocomotives"
        asp-action="Index"
        class="btn btn-outline-secondary sidebar-btn @(IsActive("PublicLocomotives", "Index") ? "btn-sub-active" : "")">
-        <i class="fas fa-train me-1" aria-hidden="true"></i> Our locomotives
+        <i class="fas fa-train me-1"></i> Our locomotives
     </a>
 }
 
-@* -------- Protected sections -------- *@
 @if (hasAnyPermission)
 {
-    @* --- Admin accordion (single) --- *@
+    @* --- Admin accordion --- *@
     if (canAdminRoles || canAdminUsers)
     {
         <div class="accordion mb-2" id="accAdminContainer">
@@ -95,7 +110,7 @@
                             data-bs-target="#@adminId"
                             aria-expanded="@(adminOpen ? "true" : "false")"
                             aria-controls="@adminId">
-                        <i class="bi bi-shield-lock-fill me-2" aria-hidden="true"></i> Admin
+                        <i class="bi bi-shield-lock-fill me-2"></i> Admin
                     </button>
                 </h2>
                 <div id="@adminId" class="accordion-collapse collapse @(adminOpen ? "show" : "")">
@@ -105,7 +120,7 @@
                            asp-controller="Locomotives"
                            asp-action="Index"
                            class="btn btn-outline-secondary sidebar-btn @(IsActive("Locomotives", "Index", "Admin") ? "btn-sub-active" : "")">
-                            <i class="fas fa-train-subway me-1" aria-hidden="true"></i> Manage locomotives
+                            <i class="fas fa-train-subway me-1"></i> Manage locomotives
                         </a>
 
                         @if (canAdminRoles)
@@ -114,7 +129,7 @@
                                asp-controller="Rbac"
                                asp-action="Roles"
                                class="btn btn-outline-secondary sidebar-btn @(IsActive("Rbac", "Roles", "Admin") ? "btn-sub-active" : "")">
-                                <i class="bi bi-award-fill me-1" aria-hidden="true"></i> Manage Roles
+                                <i class="bi bi-award-fill me-1"></i> Manage Roles
                             </a>
                         }
 
@@ -124,7 +139,7 @@
                                asp-controller="Rbac"
                                asp-action="Users"
                                class="btn btn-outline-secondary sidebar-btn @(IsActive("Rbac", "Users", "Admin") ? "btn-sub-active" : "")">
-                                <i class="bi bi-people-fill me-1" aria-hidden="true"></i> Manage Users
+                                <i class="bi bi-people-fill me-1"></i> Manage Users
                             </a>
                         }
 
@@ -146,7 +161,7 @@
                             data-bs-target="#@fuelId"
                             aria-expanded="@(fuelOpen ? "true" : "false")"
                             aria-controls="@fuelId">
-                        <i class="bi bi-fuel-pump me-2" aria-hidden="true"></i> Fuel
+                        <i class="bi bi-fuel-pump me-2"></i> Fuel
                     </button>
                 </h2>
                 <div id="@fuelId" class="accordion-collapse collapse @(fuelOpen ? "show" : "")">
@@ -155,7 +170,7 @@
                            asp-controller="Fuels"
                            asp-action="Index"
                            class="btn btn-outline-secondary sidebar-btn @(IsActive("Fuels", "Index") ? "btn-sub-active" : "")">
-                            <i class="bi bi-table me-1" aria-hidden="true"></i> List
+                            <i class="bi bi-table me-1"></i> List
                         </a>
 
                         @if (canFuelCreate)
@@ -164,7 +179,7 @@
                                asp-controller="Fuels"
                                asp-action="Create"
                                class="btn btn-outline-secondary sidebar-btn @(IsActive("Fuels", "Create") ? "btn-sub-active" : "")">
-                                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> New Input
+                                <i class="bi bi-plus-circle me-1"></i> New Input
                             </a>
                         }
 
@@ -172,7 +187,7 @@
                            asp-controller="Fuels"
                            asp-action="FuelReport"
                            class="btn btn-outline-secondary sidebar-btn @(IsActive("Fuels", "FuelReport") ? "btn-sub-active" : "")">
-                            <i class="bi bi-graph-up-arrow me-1" aria-hidden="true"></i> Fuel Report
+                            <i class="bi bi-graph-up-arrow me-1"></i> Fuel Report
                         </a>
                     </div>
                 </div>
@@ -192,7 +207,7 @@
                             data-bs-target="#@shiftId"
                             aria-expanded="@(shiftOpen ? "true" : "false")"
                             aria-controls="@shiftId">
-                        <i class="bi bi-calendar-check me-2" aria-hidden="true"></i> Shift Work
+                        <i class="bi bi-calendar-check me-2"></i> Shift Work
                     </button>
                 </h2>
                 <div id="@shiftId" class="accordion-collapse collapse @(shiftOpen ? "show" : "")">
@@ -201,7 +216,7 @@
                            asp-controller="ShiftWorks"
                            asp-action="Index"
                            class="btn btn-outline-secondary sidebar-btn @(IsActive("ShiftWorks", "Index") ? "btn-sub-active" : "")">
-                            <i class="bi bi-table me-1" aria-hidden="true"></i> Shift Overview
+                            <i class="bi bi-table me-1"></i> Shift Overview
                         </a>
 
                         @if (canShiftCreate)
@@ -210,7 +225,7 @@
                                asp-controller="ShiftWorks"
                                asp-action="Create"
                                class="btn btn-outline-secondary sidebar-btn @(IsActive("ShiftWorks", "Create") ? "btn-sub-active" : "")">
-                                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> New Shift
+                                <i class="bi bi-plus-circle me-1"></i> New Shift
                             </a>
                         }
                     </div>
@@ -220,17 +235,48 @@
     }
 }
 
-@* -------- Always visible at the very bottom -------- *@
+@* --- Repairs accordion (NEW, RBAC-controlled) --- *@
+@if (canRepairsView)
+{
+    <div class="accordion mb-2" id="accRepairsContainer">
+        <div class="accordion-item border-0">
+            <h2 class="accordion-header">
+                <button class="accordion-button py-2 px-2 @(repairsOpen ? "" : "collapsed")"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#@repairsId"
+                        aria-expanded="@(repairsOpen ? "true" : "false")"
+                        aria-controls="@repairsId">
+                    <i class="bi bi-tools me-2"></i> Repairs
+                </button>
+            </h2>
+
+            <div id="@repairsId" class="accordion-collapse collapse @(repairsOpen ? "show" : "")">
+                <div class="accordion-body py-2 px-0">
+
+                    <a asp-area=""
+                       asp-controller="AxleMeasurements"
+                       asp-action="Index"
+                       class="btn btn-outline-secondary sidebar-btn @(IsActive("AxleMeasurements", "Index") ? "btn-sub-active" : "")">
+                        <i class="bi bi-disc me-1"></i> Axle Measurements
+                    </a>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <a asp-area=""
    asp-controller="Calendar"
    asp-action="Index"
    class="btn btn-outline-secondary sidebar-btn @(IsActive("Calendar", "Index") ? "btn-sub-active" : "")">
-    <i class="bi bi-calendar3 me-1" aria-hidden="true"></i> Calendar
+    <i class="bi bi-calendar3 me-1"></i> Calendar
 </a>
 
 <a asp-area=""
    asp-controller="Calculator"
    asp-action="Index"
    class="btn btn-outline-secondary sidebar-btn @(IsActive("Calculator", "Index") ? "btn-sub-active" : "")">
-    <i class="bi bi-calculator me-1" aria-hidden="true"></i> Calculator
+    <i class="bi bi-calculator me-1"></i> Calculator
 </a>

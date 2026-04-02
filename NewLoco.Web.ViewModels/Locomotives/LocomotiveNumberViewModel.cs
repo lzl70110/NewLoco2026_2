@@ -12,6 +12,7 @@ public class LocomotiveNumberViewModel
     public string Number { get; set; } = null!;
     public LocomotiveType LocomotiveType { get; set; }
     public MeasuringUnits MeasuringUnit { get; set; }
+    public int  AxlesCount { get; set; }
     public bool IsDeleted { get; set; } = false;
 
     public string Note { get; set; } = null!;

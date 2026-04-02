@@ -79,21 +79,37 @@ namespace NewLoco.Web.Auth
             // NOTE: Any.All is intentionally NOT included here; it is for claims only, not for static listings.
 
             // Fuel
-            Fuel.View, Fuel.Create, Fuel.Edit, Fuel.Delete, Fuel.Report,
+            Fuel.View, Fuel.Create, Fuel.Edit,
+            Fuel.Delete, Fuel.Report,
 
             // Locomotive
-            Locomotive.View, Locomotive.Create, Locomotive.Edit, Locomotive.Delete,
+            Locomotive.View, Locomotive.Create, 
+            Locomotive.Edit, Locomotive.Delete,
 
             // ShiftWork
-            ShiftWork.View, ShiftWork.Create, ShiftWork.Edit, ShiftWork.Delete,
+            ShiftWork.View, ShiftWork.Create, 
+            ShiftWork.Edit, ShiftWork.Delete,
 
             // Tools
             Tools.Calculator, Tools.Calendar,
 
             // Admin
             Admin.Roles.Read, Admin.Roles.Edit,
-            Admin.Users.Read, Admin.Users.Edit
+            Admin.Users.Read, Admin.Users.Edit,
+            
+            // Repairs 
+            Repairs.View, Repairs.Create,
+            Repairs.Edit, Repairs.Delete
+
         ];
+
+        public static class Repairs
+        {
+            public const string View = "Perm.Repairs.View";
+            public const string Create = "Perm.Repairs.Create";
+            public const string Edit = "Perm.Repairs.Edit";
+            public const string Delete = "Perm.Repairs.Delete";
+        }
 
         /// <summary>
         /// Returns a stable, read-only collection of known permissions for UI/seeding tools.

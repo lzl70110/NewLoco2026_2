@@ -3,113 +3,90 @@
 
 @{
     ViewData["Title"] = "Locomotives";
+
     var currentFilter = (string?)ViewData["CurrentFilter"] ?? "all";
 
-    // Build items for Html.DropDownList (Variant 2 - avoids RZ1031)
     var filterItems = new List<SelectListItem>
     {
-        new() { Text = "All",     Value = "all",     Selected = currentFilter == "all" },
-        new() { Text = "Active",  Value = "active",  Selected = currentFilter == "active" },
-        new() { Text = "Deleted", Value = "deleted", Selected = currentFilter == "deleted" }
-         
+        new SelectListItem { Text = "All",     Value = "all",     Selected = currentFilter == "all" },
+        new SelectListItem { Text = "Active",  Value = "active",  Selected = currentFilter == "active" },
+        new SelectListItem { Text = "Deleted", Value = "deleted", Selected = currentFilter == "deleted" }
     };
+}
 
-    bool showUndelete = string.Equals(currentFilter, "deleted", StringComparison.OrdinalIgnoreCase);
-    }
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0">Locomotives</h2>
 
-<div class="container-fluid">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h2 class="mb-0">Locomotives</h2>
+    <div class="d-flex align-items-center gap-2">
+        <form method="get" class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0">Filter:</label>
+            @Html.DropDownList("filter", filterItems, new { @class = "form-select form-select-sm", onchange = "this.form.submit()" })
+        </form>
 
-        <div class="d-flex align-items-center gap-2">
-            <!-- Filter form (GET) -->
-            <form method="get" class="d-flex align-items-center gap-2">
-                <label for="filter" class="form-label mb-0">Filter:</label>
-                @Html.DropDownList(
-                "filter",
-                                filterItems,
-                                htmlAttributes: new { @class = "form-select form-select-sm", id = "filter", onchange = "this.form.submit()" }
-                                )
-            </form>
-
-            <!-- Add button -->
-            <a asp-area="Admin" asp-controller="Locomotives" asp-action="Create"
-               asp-route-filter="@currentFilter"
-               class="btn btn-sm btn-primary">
-                Add New Locomotive
-            </a>
-        </div>
+        <a asp-action="Create" asp-route-filter="@currentFilter" class="btn btn-primary btn-sm">Add New Locomotive</a>
     </div>
+</div>
 
-    <div class="table-responsive">
-        <table class="table table-striped table-hover table-loco w-auto">
-            <thead class="table-dark">
-                <tr>
-                    <th class="col-number">Number</th>
-                    <th class="col-note">Note</th>
-                    <th class="col-actions text-end">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model != null && Model.Any())
-                    {
-                    foreach (var loco in Model)
-                        {
-                        <tr>
-                            <td class="align-middle">@loco.Number</td>
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-loco w-auto">
+        <thead class="table-dark">
+            <tr>
+                <th>Number</th>
+                <th>Note</th>
+                <th>Status</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
 
-                            <td class="align-middle">
-                                <div class="note-cell" title="@loco.Note">@loco.Note</div>
-                            </td>
-
-                            <td class="text-end align-middle">
-                                <!-- Keep: Details (Edit lives inside Details) -->
-                                <a asp-area="Admin"
-                                   asp-controller="Locomotives"
-                                   asp-action="Details"
-                                   asp-route-id="@loco.Id"
-                                   asp-route-filter="@currentFilter"
-                                   class="btn btn-sm btn-info text-white">
-                                    Details
-                                </a>
-
-                                @if (showUndelete)
-                                    {
-                                    <!-- SHOW: Undelete when filter=deleted -->
-                                    <form method="post"
-                                          asp-area="Admin"
-                                          asp-controller="Locomotives"
-                                          asp-action="Undelete"
-                                          class="d-inline">
-                                        <input type="hidden" name="id" value="@loco.Id" />
-                                        <input type="hidden" name="filter" value="@currentFilter" />
-                                        <button type="submit" class="btn btn-sm btn-success">Undelete</button>
-                                    </form>
-                                    }
-                                else
-                                    {
-                                    <!-- SHOW: Delete for all other filters -->
-                                    <form method="post"
-                                          asp-area="Admin"
-                                          asp-controller="Locomotives"
-                                          asp-action="Delete"
-                                          class="d-inline">
-                                        <input type="hidden" name="id" value="@loco.Id" />
-                                        <input type="hidden" name="filter" value="@currentFilter" />
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
-                                    }
-                            </td>
-                        </tr>
-                        }
-                    }
-                else
-                    {
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var loco in Model)
+                {
                     <tr>
-                        <td colspan="3" class="text-muted">No locomotives.</td>
+                        <td class="align-middle">@loco.Number</td>
+                        <td class="align-middle">@loco.Note</td>
+                        <td class="align-middle">
+                            @if (loco.IsDeleted)
+                            {
+                                <span class="badge bg-danger">Deleted</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                        </td>
+                        <td class="text-end align-middle">
+                            <a asp-action="Details" asp-route-id="@loco.Id" asp-route-filter="@currentFilter" class="btn btn-sm btn-primary">Details</a>
+
+                            @if (loco.IsDeleted)
+                            {
+                                <form method="post" asp-action="Undelete" asp-area="Admin" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@loco.Id" />
+                                    <input type="hidden" name="filter" value="@currentFilter" />
+                                    <button type="submit" class="btn btn-sm btn-success">Undelete</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form method="post" asp-action="Delete" asp-area="Admin" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@loco.Id" />
+                                    <input type="hidden" name="filter" value="@currentFilter" />
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            }
+                        </td>
                     </tr>
-                    }
-            </tbody>
-        </table>
-    </div>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-muted">No locomotives found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
 </div>

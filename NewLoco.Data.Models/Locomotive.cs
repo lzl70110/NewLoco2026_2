@@ -17,7 +17,8 @@ public class Locomotive : BaseEntity
 
     [Comment(" Mh or Km")] 
     public MeasuringUnits MeasuringUnit { get; set; } = MeasuringUnits.Mh;
- 
+
+    public int AxlesCount { get; set; }
     public virtual ICollection<ShiftWork> ShiftWorks { get; set; }
         = new HashSet<ShiftWork>();
 

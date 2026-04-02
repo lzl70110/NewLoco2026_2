@@ -19,5 +19,7 @@ namespace NewLoco.Web.ViewModels.Locomotives
         public DateTime? ModifiedOn { get; set; }
         public string? ModifiedBy { get; set; } =String.Empty;
 
+        public int AxlesCount { get; set; }
+
         }
     }

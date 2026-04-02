@@ -1,0 +1,92 @@
+﻿@model NewLoco.Web.ViewModels.Axles.AxleMeasurementCardViewModel
+
+@{
+    ViewData["Title"] = "Create Axle Measurement Card";
+}
+
+<h2 class="mb-4 text-primary">@ViewData["Title"]</h2>
+
+<form asp-action="Create" method="post" >
+    @Html.AntiForgeryToken()
+
+    <!-- Locomotive + Measurement Date -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <label asp-for="SelectedLocomotiveId" class="form-label">Locomotive</label>
+            <select asp-for="SelectedLocomotiveId" asp-items="Model.Locomotives" class="form-select" id="locoSelect" required>
+                <option value="">-- select locomotive --</option>
+            </select>
+            <span asp-validation-for="SelectedLocomotiveId" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-4">
+            <label asp-for="MeasurementDate" class="form-label">Measurement Date</label>
+            <input asp-for="MeasurementDate" type="date" class="form-control" required />
+            <span asp-validation-for="MeasurementDate" class="text-danger"></span>
+        </div>
+    </div>
+
+    <!-- Axles Table -->
+    <h4 class="mt-4 mb-3">Axle Measurements</h4>
+    <div id="axlesContainer">
+        @if (Model.Axles != null && Model.Axles.Any())
+        {
+            @await Html.PartialAsync("_AxlesTable", Model.Axles)
+        }
+        else
+        {
+            <div class="alert alert-info">Select locomotive to load axles.</div>
+        }
+    </div>
+
+    <!-- Buttons -->
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success me-2">Save</button>
+        <a asp-action="Index" asp-controller="AxleMeasurements" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const locoSelect = document.getElementById("locoSelect");
+        const axlesContainer = document.getElementById("axlesContainer");
+
+        locoSelect.addEventListener("change", function () {
+            const locoId = this.value;
+
+            if (!locoId) {
+                axlesContainer.innerHTML =
+                    '<div class="alert alert-info">Select locomotive to load axles.</div>';
+                return;
+            }
+
+            fetch(`/AxleMeasurements/GetAxles?locomotiveId=${locoId}`)
+                .then(r => r.text())
+                .then(html => {
+                    axlesContainer.innerHTML = html;
+
+                    // Rebind unobtrusive validation to newly loaded HTML
+                    if ($.validator && $.validator.unobtrusive) {
+                        $.validator.unobtrusive.parse(axlesContainer);
+                    }
+
+                    // Execute any <script> tags inside partial
+                    const scripts = axlesContainer.querySelectorAll("script");
+                    scripts.forEach(s => {
+                        const newScript = document.createElement("script");
+                        if (s.src) newScript.src = s.src;
+                        else newScript.textContent = s.textContent;
+                        document.body.appendChild(newScript);
+                    });
+                })
+                .catch(err => {
+                    console.error(err);
+                    axlesContainer.innerHTML =
+                        '<div class="alert alert-danger">Error loading axles.</div>';
+                });
+        });
+    </script>
+
+}

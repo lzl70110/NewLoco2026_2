@@ -7,6 +7,16 @@
 
 <h2 class="mt-3">Users</h2>
 
+<!-- Messages -->
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 @if (Model == null || Model.Users == null || !Model.Users.Any())
 {
     <p>No users found.</p>
@@ -19,16 +29,85 @@ else
                 <th>User</th>
                 <th>Email</th>
                 <th>Roles</th>
+                <th>Add Role</th>
+                <th>Remove Role</th>
             </tr>
         </thead>
         <tbody>
-            @* Iterate through the Users collection, not the ViewModel itself *@
             @foreach (var u in Model.Users)
             {
                 <tr>
                     <td>@u.UserName</td>
                     <td>@u.Email</td>
-                    <td>@string.Join(", ", u.Roles ?? Enumerable.Empty<string>())</td>
+
+                    <!-- Roles -->
+                    <td>
+                        @if (u.Roles != null && u.Roles.Any())
+                        {
+                            @string.Join(", ", u.Roles)
+                        }
+                        else
+                        {
+                            <span class="text-muted">No roles</span>
+                        }
+                    </td>
+
+                    <!-- ADD ROLE -->
+                    <td>
+                        <form asp-area="Admin"
+                              asp-controller="Rbac"
+                              asp-action="AddUserToRole"
+                              method="post"
+                              class="d-flex">
+
+                            @Html.AntiForgeryToken()
+
+                            <input type="hidden" name="EmailOrUserName" value="@u.UserName" />
+
+                            <select name="RoleName" class="form-select form-select-sm me-1">
+                                @foreach (var role in Model.AllRoles.Except(u.Roles ?? Array.Empty<string>()))
+                                {
+                                    <option value="@role">@role</option>
+                                }
+                            </select>
+
+                            <button type="submit" class="btn btn-sm btn-success">
+                                Add
+                            </button>
+                        </form>
+                    </td>
+
+                    <!-- REMOVE ROLE -->
+                    <td>
+                        @if (u.Roles != null && u.Roles.Any())
+                        {
+                            <form asp-area="Admin"
+                                  asp-controller="Rbac"
+                                  asp-action="RemoveUserFromRole"
+                                  method="post"
+                                  class="d-flex">
+
+                                @Html.AntiForgeryToken()
+
+                                <input type="hidden" name="EmailOrUserName" value="@u.UserName" />
+
+                                <select name="RoleName" class="form-select form-select-sm me-1">
+                                    @foreach (var role in u.Roles)
+                                    {
+                                        <option value="@role">@role</option>
+                                    }
+                                </select>
+
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    Remove
+                                </button>
+                            </form>
+                        }
+                        else
+                        {
+                            <span class="text-muted">-</span>
+                        }
+                    </td>
                 </tr>
             }
         </tbody>

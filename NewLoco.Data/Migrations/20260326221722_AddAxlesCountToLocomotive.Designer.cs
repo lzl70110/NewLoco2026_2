@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NewLoco.Data;
 
@@ -11,9 +12,11 @@ using NewLoco.Data;
 namespace NewLoco.Data.Migrations
 {
     [DbContext(typeof(LocoDbContext))]
-    partial class LocoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326221722_AddAxlesCountToLocomotive")]
+    partial class AddAxlesCountToLocomotive
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -259,6 +262,9 @@ namespace NewLoco.Data.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
+                    b.Property<int>("LocomotiveId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("MeasurementDate")
                         .HasColumnType("datetime2");
 
@@ -273,9 +279,6 @@ namespace NewLoco.Data.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<int>("SelectedLocomotiveId")
-                        .HasColumnType("int");
-
                     b.Property<int>("SequenceNumber")
                         .HasColumnType("int");
 
@@ -284,7 +287,7 @@ namespace NewLoco.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SelectedLocomotiveId");
+                    b.HasIndex("LocomotiveId");
 
                     b.HasIndex("Year", "SequenceNumber")
                         .IsUnique();
@@ -300,35 +303,29 @@ namespace NewLoco.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<double?>("Ar")
-                        .HasColumnType("float");
-
                     b.Property<int>("AxleMeasurementCardId")
                         .HasColumnType("int");
 
                     b.Property<int>("AxleNumber")
                         .HasColumnType("int");
 
-                    b.Property<double?>("Sd_Left")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Sd_Left")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<double?>("Sd_Right")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Sd_Right")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<double?>("Sh_Left")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Sh_Left")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<double?>("Sh_Right")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("Sh_Right")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<double?>("Sr")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("qR_Left")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<double?>("qR_Left")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("qR_Right")
-                        .HasColumnType("float");
+                    b.Property<decimal?>("qR_Right")
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -590,7 +587,7 @@ namespace NewLoco.Data.Migrations
                             Id = 1,
                             AxlesCount = 0,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 3, 31, 16, 17, 40, 735, DateTimeKind.Utc).AddTicks(7052),
+                            CreatedOn = new DateTime(2026, 3, 26, 22, 17, 20, 99, DateTimeKind.Utc).AddTicks(2332),
                             IsDeleted = false,
                             LocomotiveType = 1,
                             MeasuringUnit = 1,
@@ -602,7 +599,7 @@ namespace NewLoco.Data.Migrations
                             Id = 2,
                             AxlesCount = 0,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 3, 31, 16, 17, 40, 735, DateTimeKind.Utc).AddTicks(7058),
+                            CreatedOn = new DateTime(2026, 3, 26, 22, 17, 20, 99, DateTimeKind.Utc).AddTicks(2342),
                             IsDeleted = false,
                             LocomotiveType = 1,
                             MeasuringUnit = 2,
@@ -614,7 +611,7 @@ namespace NewLoco.Data.Migrations
                             Id = 3,
                             AxlesCount = 0,
                             CreatedBy = "Seeder",
-                            CreatedOn = new DateTime(2026, 3, 31, 16, 17, 40, 735, DateTimeKind.Utc).AddTicks(7062),
+                            CreatedOn = new DateTime(2026, 3, 26, 22, 17, 20, 99, DateTimeKind.Utc).AddTicks(2346),
                             IsDeleted = false,
                             LocomotiveType = 2,
                             MeasuringUnit = 2,
@@ -736,7 +733,7 @@ namespace NewLoco.Data.Migrations
                 {
                     b.HasOne("NewLoco.Data.Models.Locomotive", "Locomotive")
                         .WithMany()
-                        .HasForeignKey("SelectedLocomotiveId")
+                        .HasForeignKey("LocomotiveId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

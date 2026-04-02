@@ -11,6 +11,8 @@ namespace NewLoco.Data
         public virtual DbSet<Locomotive> Locomotives { get; set; } = null!;
         public virtual DbSet<ShiftWork> ShiftWorks { get; set; } = null!;
         public virtual DbSet<Fuel> Fuels { get; set; } = null!;
+        public virtual DbSet<AxleMeasurementCard> AxleMeasurementCards { get; set; } = null!;
+        public virtual DbSet<AxleMeasurementValue> AxleMeasurementValues { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

@@ -16,4 +16,5 @@ public interface ILocomotiveService
 
     Task DeleteAsync(int id, string user);
     Task UndeleteAsync(int id, string user);
+ 
 }

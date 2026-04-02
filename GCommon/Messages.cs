@@ -1,7 +1,4 @@
-﻿// File: GCommon/Messages.cs
-// Purpose: Centralize UI / domain messages (no localization, English only).
-
-namespace GCommon
+﻿namespace GCommon
 {
     public static class Messages
     {
@@ -26,13 +23,11 @@ namespace GCommon
         // ---------------------------------------
         public static class ShiftWork
         {
-            // Domain / validation
             public const string Msg_InvalidHours = "Invalid motohours value.";
             public const string Msg_InvalidKilometers = "Invalid kilometers value.";
             public const string Msg_ManualFuelRequiredForKm = "Manual fuel entry is required for kilometer-based locomotives.";
             public const string Msg_NoteRequiredForOnSite = "A note is required when working on site with zero kilometers.";
 
-            // Newly added messages (Km/Mh / low fuel / amount validation)
             public const string Msg_UnitKm_ManualFuelRequired =
                 "This locomotive uses kilometers. Fuel must be entered manually.";
 
@@ -51,7 +46,6 @@ namespace GCommon
             public const string Msg_MhValueRequired =
                 "A valid motohours value is required.";
 
-            // UI texts
             public const string Error_FinalGreaterThanInitial =
                 "Final counter must be greater than the initial counter.";
 
@@ -68,20 +62,20 @@ namespace GCommon
             public const string Error_ShiftDeleteFailed = "Failed to delete shift work.";
             public const string Error_ShiftRestoreFailed = "Failed to restore shift work.";
 
-            // Newly added missing keys
             public const string Error_LocomotiveNotFound = "Locomotive not found.";
             public const string Warn_LowFuelLevelFmt = "Fuel level is low ({0} L). Please verify.";
         }
 
         // ---------------------------------------
         // Locomotive validation/messages
+        // ✔ FIXED: now using static properties instead of const
         // ---------------------------------------
         public static class Locomotive
         {
-            public const string Error_Number_Required = "Number required.";
-            public const string Error_Number_Length = "Number must be exactly 6 chars (NN-NNN).";
-            public const string Error_Number_Format = "Number must be in format NN-NNN.";
-            public const string Error_Note_Length = "Note length must be between {1} and {0}.";
+            public static string Error_Number_Required => "Number required.";
+            public static string Error_Number_Length => "Number must be exactly 6 chars (NN-NNN).";
+            public static string Error_Number_Format => "Number must be in format NN-NNN.";
+            public static string Error_Note_Length => "Note length must be between {1} and {0}.";
         }
 
         // ---------------------------------------
@@ -180,6 +174,24 @@ namespace GCommon
             public const string Msg_InvalidFormat = "Invalid format.";
             public const string Msg_RangeViolation = "Value is out of range.";
             public const string Msg_PositiveValueRequired = "Value must be greater than zero.";
+        }
+
+        // ---------------------------------------
+        // Axle validation
+        // ---------------------------------------
+        public static class Axle
+        {
+            public const string Msg_FieldRequired = "Field is Required";
+            public const string Error_Ar_Range =
+                "Measured wheel gauge (Ar) must be between 1357 mm and 1363 mm.";
+            public const string Error_Sh_Range =
+                "Flange height (Sh) must be between 25 mm and 36 mm.";
+            public const string Error_Sd_Range =
+                "Flange thickness (Sd) must be between 22 mm and 33.15 mm.";
+            public const string Error_QR_Range =
+                "Flange steepness (QR) must be between 6.5 mm and 12 mm.";
+            public const string Error_Sr_Range =
+                "Calculated wheel gauge (Sr) must be between 1410 mm and 1426 mm.";
         }
     }
 }

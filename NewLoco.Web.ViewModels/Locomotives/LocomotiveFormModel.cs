@@ -2,36 +2,41 @@
 using NewLoco.GCommon.Enums;
 using static NewLoco.GCommon.EntityValidationConstants.Locomotive;
 using static NewLoco.GCommon.EntityValidationConstants.BaseEntity;
+using static GCommon.Messages;
 
 namespace NewLoco.Web.ViewModels.Locomotives;
 
 public class LocomotiveFormModel
 {
     [Required(
-        
-        ErrorMessageResourceName = "Error_Number_Required" // required
+        ErrorMessageResourceType = typeof(Locomotive),
+        ErrorMessageResourceName = "Error_Number_Required"
     )]
     [StringLength(
-       LocomotiveNumberLength, ErrorMessageResourceName = "Error_Number_Length" // must be exactly 6 chars (NN-NNN)
+        LocomotiveNumberLength,
+        ErrorMessageResourceType = typeof(Locomotive),
+        ErrorMessageResourceName = "Error_Number_Length"
     )]
     [RegularExpression(
         @"^[0-9]{2}\-[0-9]{3}$",
-     
-        ErrorMessageResourceName = "Error_Number_Format" // enforce NN-NNN pattern
+        ErrorMessageResourceType = typeof(Locomotive),
+        ErrorMessageResourceName = "Error_Number_Format"
     )]
     public string Number { get; set; } = null!;
 
     [StringLength(
         NoteMaxLength,
         MinimumLength = NoteMinLength,
-     
-        ErrorMessageResourceName = "Error_Note_Length" // min/max length
+        ErrorMessageResourceType = typeof(Locomotive),
+        ErrorMessageResourceName = "Error_Note_Length"
     )]
     public string? Note { get; set; }
 
-    // default type for shunters
     public LocomotiveType LocomotiveType { get; set; } = LocomotiveType.Shunter;
 
-    // default measuring unit
     public MeasuringUnits MeasuringUnit { get; set; } = MeasuringUnits.Mh;
+
+    [Range(2, 8,
+    ErrorMessage = "Axles must be between 2 and 8.")]
+    public int AxlesCount { get; set; }
 }

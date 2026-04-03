@@ -30,7 +30,14 @@ namespace NewLoco.Web.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
+        public IActionResult Forbidden()
+        {
+            return View("~/Views/Shared/403.cshtml");
+        }
+        public IActionResult UnauthorizedPage()
+        {
+            return View("~/Views/Shared/401.cshtml");
+        }
     }
 
 }

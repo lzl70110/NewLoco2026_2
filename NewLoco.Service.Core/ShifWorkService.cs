@@ -7,17 +7,25 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NewLoco.Data;
 using NewLoco.Data.Models;
-using NewLoco.Service.Core.Contracts;          // IShiftWorkService, ShiftWorkDto, ShiftWorkQuery
-using NewLoco.Web.ViewModels.ShiftWorks;       // CreateShiftWorkViewModel, EditShiftWorkViewModel
+using NewLoco.Service.Core.Contracts;
+using NewLoco.Web.ViewModels.ShiftWorks;
 
 namespace NewLoco.Service.Core
 {
-    public class ShiftWorkService(LocoDbContext db, ILogger<ShiftWorkService> logger) : IShiftWorkService
+    public class ShiftWorkService : IShiftWorkService
     {
-        private readonly LocoDbContext _db = db ?? throw new ArgumentNullException(nameof(db));                // change: DI for DbContext (fix "_db does not exist")
-        private readonly ILogger<ShiftWorkService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly LocoDbContext _db;
+        private readonly ILogger<ShiftWorkService> _logger;
 
-        // Factory за Create VM
+        public ShiftWorkService(LocoDbContext db, ILogger<ShiftWorkService> logger)
+        {
+            _db = db ?? throw new ArgumentNullException(nameof(db));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        // ----------------------------------------------------------
+        // FACTORY MODEL
+        // ----------------------------------------------------------
         public CreateShiftWorkViewModel CreateModel()
         {
             return new CreateShiftWorkViewModel
@@ -30,8 +38,12 @@ namespace NewLoco.Service.Core
             };
         }
 
-        // Търсене + странициране
-        public async Task<(IEnumerable<ShiftWorkDto> Items, int Total)> GetAllAsync(ShiftWorkQuery query, CancellationToken ct = default)
+        // ----------------------------------------------------------
+        // GET ALL (FILTERED + PAGED)
+        // ----------------------------------------------------------
+        public async Task<(IEnumerable<ShiftWorkDto> Items, int Total)> GetAllAsync(
+            ShiftWorkQuery query,
+            CancellationToken ct = default)
         {
             var q = _db.ShiftWorks
                 .AsNoTracking()
@@ -41,10 +53,10 @@ namespace NewLoco.Service.Core
             if (!string.IsNullOrWhiteSpace(query.LocomotiveNumber))
             {
                 var number = query.LocomotiveNumber.Trim();
-                q = q.Where(sw => sw.Locomotive != null && sw.Locomotive.Number.Contains(number));
+                q = q.Where(sw =>
+                    sw.Locomotive != null &&
+                    sw.Locomotive.Number.Contains(number));
             }
-
-
 
             if (query.From.HasValue)
                 q = q.Where(sw => sw.Date >= query.From.Value.Date);
@@ -55,14 +67,14 @@ namespace NewLoco.Service.Core
                 q = q.Where(sw => sw.Date < next);
             }
 
-
-
-            if (!query.IncludeDeleted) q = q.Where(sw => !sw.IsDeleted);
+            if (!query.IncludeDeleted)
+                q = q.Where(sw => !sw.IsDeleted);
 
             var total = await q.CountAsync(ct);
 
             var items = await q
-                .OrderByDescending(sw => sw.Date).ThenByDescending(sw => sw.Id)
+                .OrderByDescending(sw => sw.Date)
+                .ThenByDescending(sw => sw.Id)
                 .Skip((query.Page - 1) * query.PageSize)
                 .Take(query.PageSize)
                 .Select(sw => new ShiftWorkDto
@@ -70,7 +82,7 @@ namespace NewLoco.Service.Core
                     Id = sw.Id,
                     LocoId = sw.LocomotiveId,
                     LocomotiveNumber = sw.Locomotive != null ? sw.Locomotive.Number : string.Empty,
-                    Date = sw.Date,                         // DTO e DateTime – директно
+                    Date = sw.Date,
                     Shift = sw.Shift,
                     Operator = sw.CreatedBy ?? string.Empty,
                     InitialValue = sw.InitialValue,
@@ -84,14 +96,17 @@ namespace NewLoco.Service.Core
             return (items, total);
         }
 
-        // Последна смяна за локомотив (по дата/id)
+        // ----------------------------------------------------------
+        // GET LAST SHIFT (ONLY NON-DELETED)
+        // ----------------------------------------------------------
         public async Task<ShiftWorkDto?> GetLastShiftAsync(int locomotiveId)
         {
-            var last = await _db.ShiftWorks
+            return await _db.ShiftWorks
                 .AsNoTracking()
                 .Include(sw => sw.Locomotive)
                 .Where(sw => sw.LocomotiveId == locomotiveId && !sw.IsDeleted)
-                .OrderByDescending(sw => sw.Date).ThenByDescending(sw => sw.Id)
+                .OrderByDescending(sw => sw.Date)
+                .ThenByDescending(sw => sw.Id)
                 .Select(sw => new ShiftWorkDto
                 {
                     Id = sw.Id,
@@ -107,21 +122,21 @@ namespace NewLoco.Service.Core
                     IsDeleted = sw.IsDeleted
                 })
                 .FirstOrDefaultAsync();
-
-            return last;
         }
 
-        // Зареждане за редакция
+        // ----------------------------------------------------------
+        // GET FOR EDIT
+        // ----------------------------------------------------------
         public EditShiftWorkViewModel? GetForEdit(int id)
         {
-            var e = _db.ShiftWorks.Find(id); // sync read
+            var e = _db.ShiftWorks.Find(id);
             if (e == null) return null;
 
             return new EditShiftWorkViewModel
             {
                 Id = e.Id,
                 LocomotiveId = e.LocomotiveId,
-                Date = e.Date,            // DateTime
+                Date = e.Date,
                 Shift = e.Shift,
                 InitialValue = e.InitialValue,
                 FinalValue = e.FinalValue,
@@ -129,16 +144,24 @@ namespace NewLoco.Service.Core
             };
         }
 
-        // Create
+        // ----------------------------------------------------------
+        // CREATE
+        // ----------------------------------------------------------
         public async Task CreateAsync(CreateShiftWorkViewModel model, string user)
         {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
             if (model.FinalValue <= model.InitialValue)
                 throw new InvalidOperationException("Final counter must be greater than the initial counter.");
 
-            var entity = new ShiftWork
+            if (!await _db.Locomotives.AnyAsync(l => l.Id == model.LocomotiveId))
+                throw new ArgumentException("Locomotive not found.");
+
+            var e = new ShiftWork
             {
                 LocomotiveId = model.LocomotiveId,
-                Date = model.Date.Date,   // change: нулираме часове за всеки случай
+                Date = model.Date.Date,
                 Shift = model.Shift,
                 InitialValue = model.InitialValue,
                 FinalValue = model.FinalValue,
@@ -149,16 +172,28 @@ namespace NewLoco.Service.Core
                 CreatedBy = user
             };
 
-            _db.ShiftWorks.Add(entity);
+            _db.ShiftWorks.Add(e);
             await _db.SaveChangesAsync();
         }
 
-        // Edit
+        // ----------------------------------------------------------
+        // EDIT
+        // ----------------------------------------------------------
         public async Task EditAsync(int id, EditShiftWorkViewModel model, string user)
         {
-            var e = await _db.ShiftWorks.FirstOrDefaultAsync(x => x.Id == id) ?? throw new InvalidOperationException("ShiftWork not found.");
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            var e = await _db.ShiftWorks
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new ArgumentException("ShiftWork not found.");
+
+            if (model.FinalValue <= model.InitialValue)
+                throw new InvalidOperationException("Final counter must be greater than the initial counter.");
+
             e.LocomotiveId = model.LocomotiveId;
-            e.Date = model.Date.Date;  // change: truncate time
+            e.Date = model.Date.Date;
             e.Shift = model.Shift;
             e.InitialValue = model.InitialValue;
             e.FinalValue = model.FinalValue;
@@ -170,11 +205,15 @@ namespace NewLoco.Service.Core
             await _db.SaveChangesAsync();
         }
 
-        // Soft delete
+        // ----------------------------------------------------------
+        // DELETE (SOFT DELETE)
+        // ----------------------------------------------------------
         public async Task DeleteAsync(int id, string user)
         {
-            var e = await _db.ShiftWorks.FirstOrDefaultAsync(x => x.Id == id);
-            if (e == null || e.IsDeleted) return;
+            var e = await _db.ShiftWorks
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new ArgumentException("ShiftWork not found.");
 
             e.IsDeleted = true;
             e.ModifiedOn = DateTime.UtcNow;
@@ -183,11 +222,15 @@ namespace NewLoco.Service.Core
             await _db.SaveChangesAsync();
         }
 
-        // Undo soft delete
+        // ----------------------------------------------------------
+        // UNDELETE
+        // ----------------------------------------------------------
         public async Task UndoDeleteAsync(int id, string user)
         {
-            var e = await _db.ShiftWorks.FirstOrDefaultAsync(x => x.Id == id);
-            if (e == null || !e.IsDeleted) return;
+            var e = await _db.ShiftWorks
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(x => x.Id == id)
+                ?? throw new ArgumentException("ShiftWork not found.");
 
             e.IsDeleted = false;
             e.ModifiedOn = DateTime.UtcNow;

@@ -8,14 +8,9 @@ using NewLoco.Web.ViewModels.Locomotives;
 
 namespace NewLoco.Service.Core
 {
-    public class AxleMeasurementService : IAxleMeasurementService
+    public class AxleMeasurementService(LocoDbContext context) : IAxleMeasurementService
     {
-        private readonly LocoDbContext _context;
-
-        public AxleMeasurementService(LocoDbContext context)
-        {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
+        private readonly LocoDbContext _context = context ?? throw new ArgumentNullException(nameof(context));
 
         // --------------------------------------------------------
         // LIST
@@ -106,7 +101,7 @@ namespace NewLoco.Service.Core
             return new AxleMeasurementCardViewModel
             {
                 Locomotives = locosSelectList,
-                Axles = new List<AxleMeasurementValueViewModel>()
+                Axles = []
             };
         }
 
@@ -115,8 +110,7 @@ namespace NewLoco.Service.Core
         // --------------------------------------------------------
         public async Task<int> CreateAsync(AxleMeasurementCardViewModel model, string createdBy)
         {
-            if (model == null)
-                throw new ArgumentNullException(nameof(model));
+            ArgumentNullException.ThrowIfNull(model);
 
             CalculateSr(model);
 
@@ -135,7 +129,7 @@ namespace NewLoco.Service.Core
                 SequenceNumber = nextSequence,
                 CreatedOn = DateTime.UtcNow,
                 CreatedBy = createdBy,
-                Axles = model.Axles
+                Axles = [.. model.Axles
                     .Where(a => a.Ar.HasValue || a.Sd_Left.HasValue || a.Sd_Right.HasValue
                              || a.Sh_Left.HasValue || a.Sh_Right.HasValue
                              || a.QR_Left.HasValue || a.QR_Right.HasValue)
@@ -151,8 +145,7 @@ namespace NewLoco.Service.Core
                         qR_Right = a.QR_Right ?? 0,
                         Ar = a.Ar ?? 0,
                         Sr = a.Sr ?? 0
-                    })
-                    .ToList()
+                    })]
             };
 
             _context.AxleMeasurementCards.Add(card);
@@ -175,7 +168,7 @@ namespace NewLoco.Service.Core
                 Id = card.Id,
                 SelectedLocomotiveId = card.SelectedLocomotiveId,
                 MeasurementDate = card.MeasurementDate,
-                Axles = card.Axles
+                Axles = [.. card.Axles
                     .OrderBy(a => a.AxleNumber)
                     .Select(a => new AxleMeasurementValueViewModel
                     {
@@ -188,8 +181,7 @@ namespace NewLoco.Service.Core
                         QR_Right = a.qR_Right,
                         Ar = a.Ar,
                         Sr = a.Sr
-                    })
-                    .ToList()
+                    })]
             };
 
             return model;
@@ -200,7 +192,7 @@ namespace NewLoco.Service.Core
         // --------------------------------------------------------
         public async Task UpdateAsync(AxleMeasurementCardViewModel model, string modifiedBy)
         {
-            if (model == null) throw new ArgumentNullException(nameof(model));
+            ArgumentNullException.ThrowIfNull(model);
 
             var card = await _context.AxleMeasurementCards
                 .Include(c => c.Axles)
@@ -217,7 +209,7 @@ namespace NewLoco.Service.Core
 
             CalculateSr(model);
 
-            card.Axles = model.Axles
+            card.Axles = [.. model.Axles
                 .Where(a => a.Ar.HasValue || a.Sd_Left.HasValue || a.Sd_Right.HasValue
                          || a.Sh_Left.HasValue || a.Sh_Right.HasValue
                          || a.QR_Left.HasValue || a.QR_Right.HasValue)
@@ -233,8 +225,7 @@ namespace NewLoco.Service.Core
                     qR_Right = a.QR_Right ?? 0,
                     Ar = a.Ar ?? 0,
                     Sr = a.Sr ?? 0
-                })
-                .ToList();
+                })];
 
             await _context.SaveChangesAsync();
         }

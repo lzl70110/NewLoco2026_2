@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using GCommon; // Messages
+using GCommon; 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using NewLoco.Data;
 using NewLoco.Data.Models.Fuel;
-using NewLoco.GCommon.Enums; // Shift
+using NewLoco.GCommon.Enums;
 using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.Fuels;
 
@@ -18,57 +18,60 @@ namespace NewLoco.Service.Core.Services
     {
         private readonly LocoDbContext _context;
         private readonly FuelPoliciesOptions _policies;
-
         private readonly int _depotStep;
 
         public FuelService(LocoDbContext db, IOptions<FuelPoliciesOptions> opts)
         {
             _context = db ?? throw new ArgumentNullException(nameof(db));
+
             _policies = (opts ?? throw new ArgumentNullException(nameof(opts))).Value
-                        ?? throw new ArgumentException(Messages.Fuel.Error_PoliciesNotConfigured);
+                ?? throw new ArgumentException("Fuel policies not configured.");
 
             _depotStep = Math.Max(1, _policies.DepotStepLiters);
         }
 
-        // ------------------------- helpers -------------------------
+        // -------------------------- Helpers --------------------------
 
-        private bool IsMultipleOfStep(decimal value) => value >= 0 && value % _depotStep == 0;
+        private bool IsMultipleOfStep(decimal v) =>
+            v >= 0 && v % _depotStep == 0;
 
-        private void EnsureMultipleOfStep(decimal value)
+        private void EnsureMultipleOfStep(decimal v)
         {
-            if (!IsMultipleOfStep(value))
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_FuelAmountMustBeMultipleOf10);
+            if (!IsMultipleOfStep(v))
+                throw new InvalidOperationException("Fuel amount must be aligned to depot step.");
         }
 
-        private static void EnsureNonNegative(params (decimal v, string name)[] pairs)
+        private static void EnsureNonNegative(params (decimal value, string name)[] pairs)
         {
-            foreach (var (v, _) in pairs)
-                if (v < 0) throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_InvalidFuelAmount);
+            foreach (var (value, _) in pairs)
+                if (value < 0)
+                    throw new InvalidOperationException("Negative fuel amount is not allowed.");
         }
 
         private FuelSafetyOptions GetSafetyFor(string? locoNumber)
         {
-            var cls = (locoNumber ?? string.Empty).Split('-', StringSplitOptions.TrimEntries)
-                                                  .FirstOrDefault() ?? string.Empty;
-            return _policies.PerClassSafety != null
-                && _policies.PerClassSafety.TryGetValue(cls, out var s)
+            var cls = (locoNumber ?? "").Split('-', StringSplitOptions.TrimEntries).FirstOrDefault() ?? "";
+
+            return _policies.PerClassSafety != null &&
+                   _policies.PerClassSafety.TryGetValue(cls, out var s)
                 ? s
-                : new FuelSafetyOptions { SoftWarningLiters = 120, HardFloorLiters = 100 }; // fallback
+                : new FuelSafetyOptions { HardFloorLiters = 100, SoftWarningLiters = 120 };
         }
 
-        private static Shift TryGetShiftFrom(object vm, Shift defaultValue)
+        private static Shift ExtractShift(object vm, Shift fallback)
         {
             var prop = vm.GetType().GetProperty("Shift");
-            if (prop == null) return defaultValue;
-            var value = prop.GetValue(vm);
-            return value is Shift s ? s : defaultValue;
+            if (prop == null) return fallback;
+
+            var v = prop.GetValue(vm);
+            return v is Shift s ? s : fallback;
         }
 
-        // ------------------------- queries for UI -------------------------
+        // -------------------------- Legacy UI Queries --------------------------
 
         public IEnumerable<FuelAllViewModel> GetAll()
         {
-            return [.. _context.Fuels
+            return _context.Fuels
                 .AsNoTracking()
                 .Include(f => f.Locomotive)
                 .Select(f => new FuelAllViewModel
@@ -81,33 +84,31 @@ namespace NewLoco.Service.Core.Services
                     FinalFuel = f.FinalFuel,
                     Consumption = f.Consumption,
                     Refueled = f.Refueled,
-                    Note = f.Note ?? string.Empty,
+                    Note = f.Note ?? "",
                     IsDeleted = f.IsDeleted,
                     CreatedOn = f.CreatedOn,
                     CreatedByUserName = f.CreatedBy,
                     EditedBy = f.ModifiedBy,
                     EditedOn = f.ModifiedOn
-                })];
+                })
+                .ToList();
         }
 
         public IEnumerable<FuelsBasicDetailsViewModel> GetForIndexLatest()
         {
             var latestIds = _context.Fuels
-                .AsNoTracking()
                 .Where(f => !f.IsDeleted)
                 .GroupBy(f => f.LocoId)
-                .Select(g => g.OrderByDescending(x => x.Date)
-                              .ThenByDescending(x => x.Id)
-                              .Select(x => x.Id)
-                              .FirstOrDefault())
+                .Select(g =>
+                    g.OrderByDescending(x => x.Date)
+                     .ThenByDescending(x => x.Id)
+                     .First().Id)
                 .ToList();
 
-            if (latestIds.Count == 0) return [];
-
-            var result = _context.Fuels
+            return _context.Fuels
                 .AsNoTracking()
-                .Where(f => latestIds.Contains(f.Id))
                 .Include(f => f.Locomotive)
+                .Where(f => latestIds.Contains(f.Id))
                 .Select(f => new FuelsBasicDetailsViewModel
                 {
                     Id = f.Id,
@@ -120,41 +121,37 @@ namespace NewLoco.Service.Core.Services
                 })
                 .OrderBy(x => x.LocomotiveNumber)
                 .ToList();
-
-            return result;
         }
 
-        public CreateFuelViewModel CreateModel()
-            => new()
+        public CreateFuelViewModel CreateModel() =>
+            new CreateFuelViewModel
             {
                 Date = DateTime.Today,
                 InitialFuel = 0
             };
 
-        // ------------------------- create / edit daily row -------------------------
+        // -------------------------- Legacy Create --------------------------
 
         public async Task CreateAsync(CreateFuelViewModel model, string user)
         {
             if (model.Date.Date > DateTime.Today)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_FuelInFuture);
+                throw new InvalidOperationException("Fuel entry cannot be in the future.");
 
-            EnsureNonNegative((model.FinalFuel, nameof(model.FinalFuel)),
-                              (model.Refueled, nameof(model.Refueled)));           
+            EnsureNonNegative((model.FinalFuel, "FinalFuel"), (model.Refueled, "Refueled"));
             EnsureMultipleOfStep(model.Refueled);
 
-            var shift = TryGetShiftFrom(model, Shift.Day);
+            var shift = ExtractShift(model, Shift.Day);
             var initial = await GetPrevFinalAsync(model.LocomotiveId, model.Date, shift);
 
             if (initial == 0 && model.Refueled == 0)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_NoFuelRecordForLoco);
+                throw new InvalidOperationException("Cannot create first row without refuel.");
 
             if (model.FinalFuel > initial + model.Refueled)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_FinalFuelTooHigh);
+                throw new InvalidOperationException("Final fuel cannot exceed initial + refueled.");
 
             var consumption = (initial + model.Refueled) - model.FinalFuel;
             EnsureMultipleOfStep(consumption);
 
-            // per-class hard floor check
             var locoNumber = await _context.Locomotives
                 .Where(l => l.Id == model.LocomotiveId)
                 .Select(l => l.Number)
@@ -162,10 +159,9 @@ namespace NewLoco.Service.Core.Services
 
             var safety = GetSafetyFor(locoNumber);
             if (model.FinalFuel < safety.HardFloorLiters)
-                throw new InvalidOperationException(
-                    string.Format(Messages.FuelServiceKeys.Msg_FinalBelowHardFloorFmt, safety.HardFloorLiters));
+                throw new InvalidOperationException($"Final fuel cannot be below hard floor {safety.HardFloorLiters}L.");
 
-            var entity = new NewLoco.Data.Models.Fuel.Fuel
+            var entity = new Fuel
             {
                 LocoId = model.LocomotiveId,
                 Date = model.Date,
@@ -174,8 +170,7 @@ namespace NewLoco.Service.Core.Services
                 FinalFuel = model.FinalFuel,
                 Refueled = model.Refueled,
                 Consumption = consumption,
-                Note = model.Note ?? string.Empty,
-                IsDeleted = false,
+                Note = model.Note ?? "",
                 CreatedBy = user,
                 CreatedOn = DateTime.UtcNow
             };
@@ -183,6 +178,8 @@ namespace NewLoco.Service.Core.Services
             _context.Fuels.Add(entity);
             await _context.SaveChangesAsync();
         }
+
+        // -------------------------- Legacy GetForEdit --------------------------
 
         public FuelAllViewModel? GetForEdit(int id)
         {
@@ -200,7 +197,7 @@ namespace NewLoco.Service.Core.Services
                     FinalFuel = f.FinalFuel,
                     Consumption = f.Consumption,
                     Refueled = f.Refueled,
-                    Note = f.Note ?? string.Empty,
+                    Note = f.Note ?? "",
                     IsDeleted = f.IsDeleted,
                     CreatedOn = f.CreatedOn,
                     CreatedByUserName = f.CreatedBy,
@@ -210,26 +207,28 @@ namespace NewLoco.Service.Core.Services
                 .FirstOrDefault();
         }
 
+        // -------------------------- Legacy Edit --------------------------
+
         public async Task EditAsync(int id, FuelAllViewModel model, string user)
         {
             if (model.Date.Date > DateTime.Today)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_FuelInFuture);
+                throw new InvalidOperationException("Fuel entry cannot be in the future.");
 
-            EnsureNonNegative((model.FinalFuel, nameof(model.FinalFuel)),
-                              (model.Refueled, nameof(model.Refueled)));
+            EnsureNonNegative((model.FinalFuel, "FinalFuel"), (model.Refueled, "Refueled"));
             EnsureMultipleOfStep(model.Refueled);
 
             var entity = await _context.Fuels.FindAsync(id);
             if (entity == null) return;
 
-            var shift = TryGetShiftFrom(model, entity.Shift == 0 ? Shift.Day : entity.Shift);
-            var initial = await GetPrevFinalAsync(entity.LocoId, model.Date, shift);
+            var shift = ExtractShift(model, entity.Shift == 0 ? Shift.Day : entity.Shift);
+
+            var initial = entity.InitialFuel; // <- FIXED: never recalc
 
             if (initial == 0 && model.Refueled == 0)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_NoFuelRecordForLoco);
+                throw new InvalidOperationException("Cannot edit first row without refuel.");
 
             if (model.FinalFuel > initial + model.Refueled)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_FinalFuelTooHigh);
+                throw new InvalidOperationException("Final fuel cannot exceed initial + refueled.");
 
             var consumption = (initial + model.Refueled) - model.FinalFuel;
             EnsureMultipleOfStep(consumption);
@@ -241,8 +240,7 @@ namespace NewLoco.Service.Core.Services
 
             var safety = GetSafetyFor(locoNumber);
             if (model.FinalFuel < safety.HardFloorLiters)
-                throw new InvalidOperationException(
-                    string.Format(Messages.FuelServiceKeys.Msg_FinalBelowHardFloorFmt, safety.HardFloorLiters));
+                throw new InvalidOperationException($"Final fuel cannot be below hard floor {safety.HardFloorLiters}L.");
 
             entity.Date = model.Date;
             entity.Shift = shift;
@@ -250,14 +248,14 @@ namespace NewLoco.Service.Core.Services
             entity.FinalFuel = model.FinalFuel;
             entity.Refueled = model.Refueled;
             entity.Consumption = consumption;
-            entity.Note = model.Note ?? string.Empty;
+            entity.Note = model.Note ?? "";
             entity.ModifiedBy = user;
             entity.ModifiedOn = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
         }
 
-        // ------------------------- soft delete / restore -------------------------
+        // -------------------------- Delete / Undo --------------------------
 
         public async Task DeleteAsync(int id, string user)
         {
@@ -283,12 +281,11 @@ namespace NewLoco.Service.Core.Services
             await _context.SaveChangesAsync();
         }
 
-        // ------------------------- helpers / lookups -------------------------
+        // -------------------------- Lookups --------------------------
 
         public decimal GetLastFuel(int locomotiveId)
         {
             return _context.Fuels
-                .AsNoTracking()
                 .Where(f => f.LocoId == locomotiveId && !f.IsDeleted)
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
@@ -298,33 +295,29 @@ namespace NewLoco.Service.Core.Services
         public async Task<decimal> GetPrevFinalAsync(int locomotiveId, DateTime date)
         {
             return await _context.Fuels
-                .AsNoTracking()
                 .Where(f => f.LocoId == locomotiveId && !f.IsDeleted && f.Date < date)
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
                 .FirstOrDefaultAsync();
         }
 
-        // --- overload: considers date + shift (same-day second record) ---
         public async Task<decimal> GetPrevFinalAsync(int locomotiveId, DateTime date, Shift shift, CancellationToken ct = default)
         {
             return await _context.Fuels
-                .AsNoTracking()
-                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted
-                         && (f.Date < date || (f.Date == date && f.Shift < shift)))
-                .OrderByDescending(f => f.Date)
-                .ThenByDescending(f => f.Shift)
-                .ThenByDescending(f => f.Id)
+                .Where(f =>
+                    f.LocoId == locomotiveId &&
+                    !f.IsDeleted &&
+                    (f.Date < date || (f.Date == date && f.Shift < shift)))
+                .OrderByDescending(f => f.Date).ThenByDescending(f => f.Shift).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
                 .FirstOrDefaultAsync(ct);
         }
 
-        // ------------------------- stock / refuel / consume -------------------------
+        // -------------------------- Stock / Refuel / Consume --------------------------
 
         public async Task<decimal> GetCurrentStockAsync(int locomotiveId, CancellationToken ct = default)
         {
             return await _context.Fuels
-                .AsNoTracking()
                 .Where(f => f.LocoId == locomotiveId && !f.IsDeleted)
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .Select(f => f.FinalFuel)
@@ -333,29 +326,30 @@ namespace NewLoco.Service.Core.Services
 
         public async Task RefuelAsync(int locomotiveId, int liters, string user, string? note = null, CancellationToken ct = default)
         {
-            if (liters <= 0) throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_InvalidFuelAmount);
+            if (liters <= 0)
+                throw new InvalidOperationException("Fuel amount must be positive.");
+
             EnsureMultipleOfStep(liters);
 
             var today = DateTime.Today;
 
-            // If there's already a row for today -> update refueled/final on it, else create
-            var todayRow = await _context.Fuels
+            var row = await _context.Fuels
                 .Where(f => f.LocoId == locomotiveId && !f.IsDeleted && f.Date == today)
                 .OrderByDescending(f => f.Id)
                 .FirstOrDefaultAsync(ct);
 
-            if (todayRow != null)
+            if (row != null)
             {
-                todayRow.Refueled += liters;
-                todayRow.FinalFuel += liters;
-                todayRow.ModifiedBy = user;
-                todayRow.ModifiedOn = DateTime.UtcNow;
+                row.Refueled += liters;
+                row.FinalFuel += liters;
+                row.ModifiedBy = user;
+                row.ModifiedOn = DateTime.UtcNow;
 
                 if (!string.IsNullOrWhiteSpace(note))
                 {
-                    todayRow.Note = string.IsNullOrWhiteSpace(todayRow.Note)
+                    row.Note = string.IsNullOrEmpty(row.Note)
                         ? note
-                        : $"{todayRow.Note}{Messages.Fuel.NotesJoinSeparator}{note}";
+                        : $"{row.Note}; {note}";
                 }
 
                 await _context.SaveChangesAsync(ct);
@@ -363,9 +357,8 @@ namespace NewLoco.Service.Core.Services
             }
 
             var initial = await GetPrevFinalAsync(locomotiveId, today);
-            if (initial < 0) initial = 0;
 
-            var entity = new NewLoco.Data.Models.Fuel.Fuel
+            var entity = new Fuel
             {
                 LocoId = locomotiveId,
                 Date = today,
@@ -374,8 +367,7 @@ namespace NewLoco.Service.Core.Services
                 Refueled = liters,
                 FinalFuel = initial + liters,
                 Consumption = 0,
-                Note = note ?? string.Empty,
-                IsDeleted = false,
+                Note = note ?? "",
                 CreatedBy = user,
                 CreatedOn = DateTime.UtcNow
             };
@@ -386,85 +378,74 @@ namespace NewLoco.Service.Core.Services
 
         public async Task ConsumeAsync(int locomotiveId, int liters, string user, string? note = null, CancellationToken ct = default)
         {
-            // Default “today/Shift.Day” consumer – if no row for today, create one.
             await ConsumeOnAsync(locomotiveId, DateTime.Today, Shift.Day, liters, user, note, ct);
         }
 
         public async Task ConsumeOnAsync(int locomotiveId, DateTime date, Shift shift, int liters, string user, string? note = null, CancellationToken ct = default)
         {
             if (liters <= 0) return;
+
             EnsureMultipleOfStep(liters);
 
-            // last known row (for initial fallback & safety lookup)
             var last = await _context.Fuels
                 .Include(f => f.Locomotive)
                 .Where(f => f.LocoId == locomotiveId && !f.IsDeleted)
                 .OrderByDescending(f => f.Date).ThenByDescending(f => f.Id)
                 .FirstOrDefaultAsync(ct)
-                ?? throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_NoFuelRecordForLoco);
+                ?? throw new InvalidOperationException("No previous record for this locomotive.");
 
-            // resolve class thresholds
-            var locoNumber = last.Locomotive?.Number;
-            if (string.IsNullOrWhiteSpace(locoNumber))
-            {
-                locoNumber = await _context.Locomotives
-                    .Where(l => l.Id == locomotiveId)
-                    .Select(l => l.Number)
-                    .FirstOrDefaultAsync(ct);
-            }
-            var safety = GetSafetyFor(locoNumber);
+            var safety = GetSafetyFor(last.Locomotive?.Number);
 
-            // If row for (date, shift) exists -> update it
             var row = await _context.Fuels
-                .Where(f => f.LocoId == locomotiveId && !f.IsDeleted && f.Date == date && f.Shift == shift)
+                .Where(f => f.LocoId == locomotiveId &&
+                            !f.IsDeleted &&
+                            f.Date == date &&
+                            f.Shift == shift)
                 .OrderByDescending(f => f.Id)
                 .FirstOrDefaultAsync(ct);
 
             if (row != null)
             {
-                var projectedFinal = row.FinalFuel - liters;
-                if (projectedFinal < safety.HardFloorLiters)
-                    throw new InvalidOperationException(
-                        string.Format(Messages.FuelServiceKeys.Msg_FinalBelowHardFloorFmt, safety.HardFloorLiters));
+                var projected = row.FinalFuel - liters;
 
-                row.FinalFuel = projectedFinal;
+                if (projected < safety.HardFloorLiters)
+                    throw new InvalidOperationException($"Final fuel cannot be below hard floor {safety.HardFloorLiters}L.");
+
+                row.FinalFuel = projected;
                 row.Consumption += liters;
+                row.ModifiedBy = user;
+                row.ModifiedOn = DateTime.UtcNow;
 
                 if (!string.IsNullOrWhiteSpace(note))
                 {
-                    row.Note = string.IsNullOrWhiteSpace(row.Note)
+                    row.Note = string.IsNullOrEmpty(row.Note)
                         ? note
-                        : $"{row.Note}{Messages.Fuel.NotesJoinSeparator}{note}";
+                        : $"{row.Note}; {note}";
                 }
-
-                row.ModifiedBy = user;
-                row.ModifiedOn = DateTime.UtcNow;
 
                 await _context.SaveChangesAsync(ct);
                 return;
             }
 
-            // Else: create a new daily row for (date, shift)
             var initial = await GetPrevFinalAsync(locomotiveId, date, shift, ct);
+
             if (initial <= 0)
-                throw new InvalidOperationException(Messages.FuelServiceKeys.Msg_NoFuelRecordForLoco);
+                throw new InvalidOperationException("No previous fuel entry available.");
 
             var final = initial - liters;
-            if (final < safety.HardFloorLiters)
-                throw new InvalidOperationException(
-                    string.Format(Messages.FuelServiceKeys.Msg_FinalBelowHardFloorFmt, safety.HardFloorLiters));
 
-            var entity = new NewLoco.Data.Models.Fuel.Fuel
+            if (final < safety.HardFloorLiters)
+                throw new InvalidOperationException($"Final fuel cannot be below hard floor {safety.HardFloorLiters}L.");
+
+            var entity = new Fuel
             {
                 LocoId = locomotiveId,
                 Date = date,
                 Shift = shift,
                 InitialFuel = initial,
-                Refueled = 0,
                 Consumption = liters,
                 FinalFuel = final,
-                Note = note ?? string.Empty,
-                IsDeleted = false,
+                Note = note ?? "",
                 CreatedBy = user,
                 CreatedOn = DateTime.UtcNow
             };
@@ -473,15 +454,16 @@ namespace NewLoco.Service.Core.Services
             await _context.SaveChangesAsync(ct);
         }
 
-        /// legacy forwarder (decimal -> int, same depot rule)
         public async Task ConsumeFuelAsync(int locomotiveId, decimal amount, string user)
         {
             if (amount <= 0) return;
+
             EnsureNonNegative((amount, nameof(amount)));
             EnsureMultipleOfStep(amount);
 
             var liters = (int)Math.Round(amount, 0, MidpointRounding.AwayFromZero);
-            await ConsumeAsync(locomotiveId, liters, user, note: null);
+
+            await ConsumeAsync(locomotiveId, liters, user);
         }
     }
 }

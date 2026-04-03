@@ -1,0 +1,33 @@
+﻿@{
+    Layout = "_ErrorLayout";
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="text-center">
+        <h1 class="display-1 fw-bold text-warning">403</h1>
+        <h2 class="mb-4">Access Forbidden</h2>
+
+        <p class="lead mb-4">
+            You do not have permission to access this resource.<br />
+            If you believe this is an error, please contact your administrator.
+        </p>
+
+        /
+    </div>
+</div>
+
+<style>
+    .display-1 {
+        font-size: 8rem;
+    }
+
+    @@media (max-width: 768px) {
+        .display-1
+
+    {
+        font-size: 5rem;
+    }
+
+    }
+</style>

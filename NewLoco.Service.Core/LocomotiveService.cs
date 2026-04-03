@@ -14,23 +14,21 @@ namespace NewLoco.Service.Core
 
         public LocomotiveService(LocoDbContext db)
         {
-            _db = db;
+            _db = db ?? throw new ArgumentNullException(nameof(db));
         }
 
-        // ---------------------------
-        // LIST WITH FILTER (Active / Deleted / All)
-        // ---------------------------
+        // ----------------------------------------------------------
+        // LIST WITH FILTER
+        // ----------------------------------------------------------
         public async Task<IEnumerable<LocoNumberDto>> GetAllAsync(string? filter)
         {
             IQueryable<Locomotive> query = _db.Locomotives.AsQueryable();
 
-            // Ако имаш глобален EF Core query filter за IsDeleted,
-            // IgnoreQueryFilters() позволява да върнеш deleted записи
             query = filter switch
             {
                 "deleted" => query.IgnoreQueryFilters().Where(l => l.IsDeleted),
                 "all" => query.IgnoreQueryFilters(),
-                _ => query.Where(l => !l.IsDeleted)   // default = active
+                _ => query.Where(l => !l.IsDeleted)
             };
 
             return await query
@@ -47,16 +45,17 @@ namespace NewLoco.Service.Core
                 .ToListAsync();
         }
 
-        // ---------------------------
+        // ----------------------------------------------------------
         // DETAILS
-        // ---------------------------
-        public async Task<LocoDetailsDto?> GetDetailsAsync(int id)
+        // ----------------------------------------------------------
+        public async Task<LocoDetailsDto> GetDetailsAsync(int id)
         {
             var e = await _db.Locomotives
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
 
-            if (e == null) return null;
+            if (e == null)
+                throw new ArgumentException("Locomotive not found.");
 
             return new LocoDetailsDto(
                 e.Id,
@@ -72,13 +71,17 @@ namespace NewLoco.Service.Core
                 e.ModifiedBy);
         }
 
-        // ---------------------------
+        // ----------------------------------------------------------
         // LOAD FOR EDIT
-        // ---------------------------
+        // ----------------------------------------------------------
         public async Task<LocomotiveFormDto?> GetForEditAsync(int id)
         {
-            var e = await _db.Locomotives.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-            if (e == null) return null;
+            var e = await _db.Locomotives
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (e == null)
+                return null;
 
             return new LocomotiveFormDto(
                 e.Number,
@@ -89,11 +92,14 @@ namespace NewLoco.Service.Core
             );
         }
 
-        // ---------------------------
+        // ----------------------------------------------------------
         // CREATE
-        // ---------------------------
+        // ----------------------------------------------------------
         public async Task CreateAsync(LocomotiveFormDto model, string user)
         {
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
             var e = new Locomotive
             {
                 Number = model.Number,
@@ -110,32 +116,36 @@ namespace NewLoco.Service.Core
             await _db.SaveChangesAsync();
         }
 
-        // ---------------------------
+        // ----------------------------------------------------------
         // EDIT
-        // ---------------------------
+        // ----------------------------------------------------------
         public async Task EditAsync(int id, LocomotiveFormDto model, string user)
         {
-            var e = await _db.Locomotives.FindAsync(id);
-            if (e == null) return;
+            if (model == null)
+                throw new ArgumentNullException(nameof(model));
+
+            var e = await _db.Locomotives.FindAsync(id)
+                ?? throw new ArgumentException("Locomotive not found.");
 
             e.Number = model.Number;
             e.LocomotiveType = model.LocomotiveType;
             e.MeasuringUnit = model.MeasuringUnit;
             e.AxlesCount = model.AxlesCount;
             e.Note = model.Note;
+
             e.ModifiedOn = DateTime.UtcNow;
             e.ModifiedBy = user;
 
             await _db.SaveChangesAsync();
         }
 
-        // ---------------------------
+        // ----------------------------------------------------------
         // SOFT DELETE
-        // ---------------------------
+        // ----------------------------------------------------------
         public async Task DeleteAsync(int id, string user)
         {
-            var e = await _db.Locomotives.FindAsync(id);
-            if (e == null || e.IsDeleted) return;
+            var e = await _db.Locomotives.FindAsync(id)
+                ?? throw new ArgumentException("Locomotive not found.");
 
             e.IsDeleted = true;
             e.ModifiedOn = DateTime.UtcNow;
@@ -144,13 +154,13 @@ namespace NewLoco.Service.Core
             await _db.SaveChangesAsync();
         }
 
-        // ---------------------------
+        // ----------------------------------------------------------
         // UNDELETE
-        // ---------------------------
+        // ----------------------------------------------------------
         public async Task UndeleteAsync(int id, string user)
         {
-            var e = await _db.Locomotives.FindAsync(id);
-            if (e == null || !e.IsDeleted) return;
+            var e = await _db.Locomotives.FindAsync(id)
+                ?? throw new ArgumentException("Locomotive not found.");
 
             e.IsDeleted = false;
             e.ModifiedOn = DateTime.UtcNow;
@@ -159,9 +169,9 @@ namespace NewLoco.Service.Core
             await _db.SaveChangesAsync();
         }
 
-        // ---------------------------
-        // DROPDOWN OPTIONS
-        // ---------------------------
+        // ----------------------------------------------------------
+        // OPTIONS DROPDOWN
+        // ----------------------------------------------------------
         public async Task<IEnumerable<LocoOptionDto>> GetOptionsAsync()
         {
             return await _db.Locomotives
@@ -175,9 +185,9 @@ namespace NewLoco.Service.Core
                 .ToListAsync();
         }
 
-        // ---------------------------
-        // GET TYPE
-        // ---------------------------
+        // ----------------------------------------------------------
+        // GET TYPE ONLY
+        // ----------------------------------------------------------
         public async Task<LocomotiveType> GetTypeAsync(int locomotiveId)
         {
             return await _db.Locomotives

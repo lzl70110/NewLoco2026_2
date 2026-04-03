@@ -88,7 +88,7 @@ namespace NewLoco.Web
             {
                 options.LoginPath = "/Identity/Account/Login";
                 options.LogoutPath = "/Identity/Account/Logout";
-                options.AccessDeniedPath = "/PublicLocomotives/Index";
+                options.AccessDeniedPath = "/Home/Forbidden";
             });
 
             builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>,
@@ -139,6 +139,20 @@ namespace NewLoco.Web
                 app.UseExceptionHandler("/Home/Error");
                 app.UseHsts();
             }
+
+            app.UseStatusCodePages(async context =>
+            {
+                var statusCode = context.HttpContext.Response.StatusCode;
+
+                if (statusCode == 401)
+                {
+                    context.HttpContext.Response.Redirect("/Home/UnauthorizedPage");
+                }
+                else if (statusCode == 403)
+                {
+                    context.HttpContext.Response.Redirect("/Home/Forbidden");
+                }
+            });
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();

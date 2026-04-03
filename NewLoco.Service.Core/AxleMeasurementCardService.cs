@@ -16,8 +16,7 @@ namespace NewLoco.Service.Core
         }
 
         public async Task<AxleMeasurementCardViewModel> GetCreateModelAsync()
-        {
-            // Взимаме локомотивите
+        { 
             var locos = await _context.Locomotives
                 .OrderBy(x => x.Number)
                 .Select(x => new
@@ -27,7 +26,6 @@ namespace NewLoco.Service.Core
                 })
                 .ToListAsync();
 
-            // Мапваме към SelectListItem
             var locosSelectList = locos
                 .Select(l => new SelectListItem
                 {

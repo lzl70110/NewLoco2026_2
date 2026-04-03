@@ -388,7 +388,71 @@ namespace NewLoco.Tests
             // Assert
             result.Should().BeNull();
         }
+        [Fact]
+        public async Task CreateAsync_ShouldThrow_WhenDtoIsNull()
+        {
+            var context = CreateDbContext();
+            var service = new LocomotiveService(context);
+
+            Func<Task> act = () => service.CreateAsync(null!, "User");
+
+            await act.Should().ThrowAsync<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task EditAsync_ShouldThrow_WhenDtoIsNull()
+        {
+            var context = CreateDbContext();
+            var service = new LocomotiveService(context);
+
+            Func<Task> act = () => service.EditAsync(1, null!, "Editor");
+
+            await act.Should().ThrowAsync<ArgumentNullException>();
+        }
+
+        [Fact]
+        public async Task EditAsync_ShouldThrow_WhenLocomotiveNotFound()
+        {
+            var context = CreateDbContext();
+            var service = new LocomotiveService(context);
+
+            var dto = new LocomotiveFormDto(
+                Number: "52000",
+                LocomotiveType: LocomotiveType.Shunter,
+                MeasuringUnit: MeasuringUnits.Mh,
+                AxlesCount: 4,
+                Note: "Test"
+            );
+
+            Func<Task> act = () => service.EditAsync(999, dto, "Editor");
+
+            await act.Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task DeleteAsync_ShouldThrow_WhenIdNotFound()
+        {
+            var context = CreateDbContext();
+            var service = new LocomotiveService(context);
+
+            Func<Task> act = () => service.DeleteAsync(999, "Admin");
+
+            await act.Should().ThrowAsync<ArgumentException>();
+        }
+
+        [Fact]
+        public async Task UndeleteAsync_ShouldThrow_WhenIdNotFound()
+        {
+            var context = CreateDbContext();
+            var service = new LocomotiveService(context);
+
+            Func<Task> act = () => service.UndeleteAsync(999, "Admin");
+
+            await act.Should().ThrowAsync<ArgumentException>();
+        }
 
     }
+
+
 
 }

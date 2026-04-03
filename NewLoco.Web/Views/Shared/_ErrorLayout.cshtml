@@ -1,0 +1,27 @@
+﻿@{
+    Layout = null;
+    var title = ViewData["Title"] ?? "Error";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title - NewLoco</title>
+
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+</head>
+
+<body class="bg-light">
+
+    <div class="container d-flex flex-column justify-content-center align-items-center"
+         style="min-height: 80vh;">
+
+        @RenderBody()
+
+    </div>
+
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

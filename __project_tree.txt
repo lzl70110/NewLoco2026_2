@@ -249,7 +249,14 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │                       NewLoco.Service.Core.dll
 │                       
 ├───NewLoco.TestS
+│   │   AxleMeasurementCardServiceTests.cs
+│   │   AxleMeasurementServiceTests.cs
+│   │   FuelEstimatorTests.cs
+│   │   FuelServiceTests.cs
+│   │   LocomotiveServiceTests.cs
+│   │   LocomotiveValidationTests.cs
 │   │   NewLoco.Tests.csproj
+│   │   ShiftWorkServiceTests.cs
 │   │   
 │   ├───bin
 │   │   └───Debug
@@ -583,6 +590,7 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │           │   NewLoco.Tests.AssemblyInfoInputs.cache
 │   │           │   NewLoco.TestS.assets.cache
 │   │           │   NewLoco.Tests.csproj.AssemblyReference.cache
+│   │           │   NewLoco.Tests.csproj.BuildWithSkipAnalyzers
 │   │           │   NewLoco.Tests.csproj.CoreCompileInputs.cache
 │   │           │   NewLoco.Tests.csproj.FileListAbsolute.txt
 │   │           │   NewLoco.Tests.dll
@@ -598,9 +606,13 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │           └───refint
 │   │                   NewLoco.Tests.dll
 │   │                   
-│   └───TestHelpers
-│           TestDbContextFactory.cs
-│           
+│   ├───TestHelpers
+│   │       TestDbContextFactory.cs
+│   │       
+│   └───TestResults
+│       └───e7f6f951-e6d0-4ada-a4f1-a6effee424c1
+│               coverage.cobertura.xml
+│               
 ├───NewLoco.Web
 │   │   appsettings.Development.json
 │   │   appsettings.json
@@ -1554,7 +1566,12 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │   │       Index.cshtml
 │   │   │       
 │   │   ├───Shared
+│   │   │       401.cshtml
+│   │   │       403.cshtml
+│   │   │       404.cshtml
+│   │   │       AssemblyInfo.cshtml
 │   │   │       Error.cshtml
+│   │   │       _ErrorLayout.cshtml
 │   │   │       _Layout.cshtml
 │   │   │       _Layout.cshtml.css
 │   │   │       _LoginPartial.cshtml

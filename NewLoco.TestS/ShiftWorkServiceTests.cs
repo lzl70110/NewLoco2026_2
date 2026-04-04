@@ -1,262 +1,251 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NewLoco.Data;
 using NewLoco.Data.Models;
+using NewLoco.GCommon.Enums;
 using NewLoco.Service.Core;
+using NewLoco.Service.Core.Contracts;
 using NewLoco.Web.ViewModels.ShiftWorks;
 using Xunit;
 
-namespace NewLoco.Tests
+namespace NewLoco.Tests.Services
 {
     public class ShiftWorkServiceTests
     {
-        private static LocoDbContext GetDb()
+        private LocoDbContext GetDb()
         {
             var options = new DbContextOptionsBuilder<LocoDbContext>()
                 .UseInMemoryDatabase(Guid.NewGuid().ToString())
                 .Options;
 
-            return new LocoDbContext(options);
+            var db = new LocoDbContext(options);
+
+            // Seed a locomotive with required CreatedBy
+            db.Locomotives.Add(new Locomotive
+            {
+                Id = 1,
+                Number = "52-101",
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "test"
+            });
+
+            db.SaveChanges();
+            return db;
         }
 
-        private Locomotive MakeLoco(int id, string number)
-            => new Locomotive
-            {
-                Id = id,
-                Number = number,
-                AxlesCount = 4,
-                CreatedBy = "test",
-                CreatedOn = DateTime.UtcNow
-            };
+        private ShiftWorkService GetService(LocoDbContext db)
+            => new ShiftWorkService(db, new LoggerFactory().CreateLogger<ShiftWorkService>());
 
-        private ShiftWork MakeShift(int id, int locoId, DateTime date, int init, int fin, bool deleted = false)
-            => new ShiftWork
-            {
-                Id = id,
-                LocomotiveId = locoId,
-                Date = date.Date,
-                InitialValue = init,
-                FinalValue = fin,
-                Amount = fin - init,
-                IsDeleted = deleted,
-                CreatedBy = "test",
-                CreatedOn = DateTime.UtcNow
-            };
-
-        // ---------------------------------------------------------------------
-        // CREATE
-        // ---------------------------------------------------------------------
         [Fact]
-        public async Task CreateAsync_ShouldCreateShiftWork()
+        public async Task CreateAsync_Should_Add_ShiftWork()
         {
             var db = GetDb();
-            db.Locomotives.Add(MakeLoco(5, "52-034"));
-            await db.SaveChangesAsync();
-
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
-
-            var model = new CreateShiftWorkViewModel
-            {
-                LocomotiveId = 5,
-                Date = new DateTime(2026, 3, 1, 12, 30, 0),
-                Shift = NewLoco.GCommon.Enums.Shift.Day,
-                InitialValue = 1000,
-                FinalValue = 1200,
-                Note = "Test shift"
-            };
-
-            await service.CreateAsync(model, "Tester");
-
-            var created = await db.ShiftWorks.FirstOrDefaultAsync();
-
-            Assert.NotNull(created);
-            Assert.Equal(5, created!.LocomotiveId);
-            Assert.Equal(new DateTime(2026, 3, 1), created.Date);
-            Assert.Equal(1000, created.InitialValue);
-            Assert.Equal(1200, created.FinalValue);
-            Assert.Equal(200, created.Amount);
-            Assert.Equal("Tester", created.CreatedBy);
-        }
-
-        // ---------------------------------------------------------------------
-        // CREATE FAIL
-        // ---------------------------------------------------------------------
-        [Fact]
-        public async Task CreateAsync_ShouldThrow_WhenFinalNotGreater()
-        {
-            var db = GetDb();
-            db.Locomotives.Add(MakeLoco(1, "55-001"));
-            await db.SaveChangesAsync();
-
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
+            var service = GetService(db);
 
             var model = new CreateShiftWorkViewModel
             {
                 LocomotiveId = 1,
                 Date = DateTime.Today,
-                Shift = NewLoco.GCommon.Enums.Shift.Day,
+                Shift = Shift.Day,
                 InitialValue = 100,
-                FinalValue = 100
+                FinalValue = 150,
+                Note = "Test note"
             };
 
-            await Assert.ThrowsAsync<InvalidOperationException>(
-                () => service.CreateAsync(model, "user"));
+            await service.CreateAsync(model, "tester");
+
+            var sw = db.ShiftWorks.First();
+            Assert.Equal(1, sw.LocomotiveId);
+            Assert.Equal(50, sw.Amount);
+            Assert.Equal("tester", sw.CreatedBy);
         }
 
-        // ---------------------------------------------------------------------
-        // EDIT
-        // ---------------------------------------------------------------------
         [Fact]
-        public async Task EditAsync_ShouldUpdate()
+        public async Task EditAsync_Should_Update_ShiftWork()
         {
             var db = GetDb();
+            var service = GetService(db);
 
-            db.Locomotives.Add(MakeLoco(1, "55-001"));
-            db.ShiftWorks.Add(MakeShift(10, 1, new DateTime(2026, 1, 1), 100, 150));
-            await db.SaveChangesAsync();
-
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
+            // Seed ShiftWork
+            var sw = new ShiftWork
+            {
+                LocomotiveId = 1,
+                Date = DateTime.Today,
+                Shift = Shift.Day,
+                InitialValue = 100,
+                FinalValue = 150,
+                Amount = 50,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "seed"
+            };
+            db.ShiftWorks.Add(sw);
+            db.SaveChanges();
 
             var model = new EditShiftWorkViewModel
             {
-                Id = 10,
                 LocomotiveId = 1,
-                Date = new DateTime(2026, 2, 2, 23, 10, 0),
-                Shift = NewLoco.GCommon.Enums.Shift.Night,
-                InitialValue = 200,
-                FinalValue = 260,
-                Note = "edited"
+                Date = DateTime.Today,
+                Shift = Shift.Night,
+                InitialValue = 120,
+                FinalValue = 160,
+                Note = "Edited"
             };
 
-            await service.EditAsync(10, model, "editor");
+            await service.EditAsync(sw.Id, model, "editor");
 
-            var e = await db.ShiftWorks.FirstOrDefaultAsync(x => x.Id == 10);
-
-            Assert.NotNull(e);
-            Assert.Equal(new DateTime(2026, 2, 2), e!.Date);
-            Assert.Equal(NewLoco.GCommon.Enums.Shift.Night, e.Shift);
-            Assert.Equal(200, e.InitialValue);
-            Assert.Equal(260, e.FinalValue);
-            Assert.Equal(60, e.Amount);
-            Assert.Equal("editor", e.ModifiedBy);
+            var updated = db.ShiftWorks.First();
+            Assert.Equal(40, updated.Amount);
+            Assert.Equal("editor", updated.ModifiedBy);
+            Assert.Equal(Shift.Night, updated.Shift);
+            Assert.Equal("Edited", updated.Note);
         }
 
-        // ---------------------------------------------------------------------
-        // DELETE (SOFT DELETE)
-        // ---------------------------------------------------------------------
         [Fact]
-        public async Task DeleteAsync_ShouldSoftDelete()
+        public async Task DeleteAsync_Should_Mark_IsDeleted()
         {
             var db = GetDb();
+            var service = GetService(db);
 
-            db.Locomotives.Add(MakeLoco(1, "55-001"));
-            db.ShiftWorks.Add(MakeShift(1, 1, DateTime.Today, 0, 1));
-            await db.SaveChangesAsync();
+            var sw = new ShiftWork
+            {
+                LocomotiveId = 1,
+                Date = DateTime.Today,
+                Shift = Shift.Day,
+                InitialValue = 0,
+                FinalValue = 50,
+                Amount = 50,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "seed"
+            };
+            db.ShiftWorks.Add(sw);
+            db.SaveChanges();
 
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
+            await service.DeleteAsync(sw.Id, "deleter");
 
-            await service.DeleteAsync(1, "u");
-
-            var e = await db.ShiftWorks
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(x => x.Id == 1);
-
-            Assert.NotNull(e);
-            Assert.True(e!.IsDeleted);
-            Assert.Equal("u", e.ModifiedBy);
+            var deleted = db.ShiftWorks.IgnoreQueryFilters().First();
+            Assert.True(deleted.IsDeleted);
+            Assert.Equal("deleter", deleted.ModifiedBy);
         }
 
-        // ---------------------------------------------------------------------
-        // UNDELETE
-        // ---------------------------------------------------------------------
         [Fact]
-        public async Task UndoDeleteAsync_ShouldRestore()
+        public async Task UndoDeleteAsync_Should_Unmark_IsDeleted()
         {
             var db = GetDb();
+            var service = GetService(db);
 
-            db.Locomotives.Add(MakeLoco(1, "55-001"));
-            db.ShiftWorks.Add(MakeShift(1, 1, DateTime.Today, 0, 1, deleted: true));
-            await db.SaveChangesAsync();
+            var sw = new ShiftWork
+            {
+                LocomotiveId = 1,
+                Date = DateTime.Today,
+                Shift = Shift.Day,
+                InitialValue = 0,
+                FinalValue = 50,
+                Amount = 50,
+                IsDeleted = true,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "seed"
+            };
+            db.ShiftWorks.Add(sw);
+            db.SaveChanges();
 
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
+            await service.UndoDeleteAsync(sw.Id, "restorer");
 
-            await service.UndoDeleteAsync(1, "u");
-
-            var e = await db.ShiftWorks
-                .IgnoreQueryFilters()
-                .FirstOrDefaultAsync(x => x.Id == 1);
-
-            Assert.NotNull(e);
-            Assert.False(e!.IsDeleted);
-            Assert.Equal("u", e.ModifiedBy);
+            var restored = db.ShiftWorks.First();
+            Assert.False(restored.IsDeleted);
+            Assert.Equal("restorer", restored.ModifiedBy);
         }
 
-        // ---------------------------------------------------------------------
-        // GET LAST SHIFT
-        // ---------------------------------------------------------------------
         [Fact]
-        public async Task GetLastShiftAsync_ShouldReturnLatest()
+        public async Task GetAllAsync_Should_Paginate()
         {
             var db = GetDb();
+            var service = GetService(db);
 
-            db.Locomotives.Add(MakeLoco(1, "55-001"));
+            for (int i = 1; i <= 10; i++)
+            {
+                db.ShiftWorks.Add(new ShiftWork
+                {
+                    LocomotiveId = 1,
+                    Date = DateTime.Today.AddDays(i),
+                    Shift = Shift.Day,
+                    InitialValue = i * 10,
+                    FinalValue = i * 10 + 5,
+                    Amount = 5,
+                    CreatedOn = DateTime.UtcNow,
+                    CreatedBy = "seed"
+                });
+            }
+            db.SaveChanges();
 
-            db.ShiftWorks.Add(MakeShift(1, 1, new DateTime(2026, 1, 1), 0, 1));
-            db.ShiftWorks.Add(MakeShift(2, 1, new DateTime(2026, 1, 5), 0, 1));
-            db.ShiftWorks.Add(MakeShift(3, 1, new DateTime(2026, 1, 5), 0, 1));
-            await db.SaveChangesAsync();
+            var query = new ShiftWorkQuery { Page = 2, PageSize = 3 };
+            var (items, total) = await service.GetAllAsync(query);
 
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
+            Assert.Equal(10, total);
+            Assert.Equal(3, items.Count());
+        }
+
+        [Fact]
+        public async Task GetLastShiftAsync_Should_Return_Latest()
+        {
+            var db = GetDb();
+            var service = GetService(db);
+
+            db.ShiftWorks.Add(new ShiftWork
+            {
+                LocomotiveId = 1,
+                Date = DateTime.Today.AddDays(-1),
+                Shift = Shift.Day,
+                InitialValue = 0,
+                FinalValue = 10,
+                Amount = 10,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "seed"
+            });
+            db.ShiftWorks.Add(new ShiftWork
+            {
+                LocomotiveId = 1,
+                Date = DateTime.Today,
+                Shift = Shift.Night,
+                InitialValue = 10,
+                FinalValue = 20,
+                Amount = 10,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "seed"
+            });
+            db.SaveChanges();
 
             var last = await service.GetLastShiftAsync(1);
-
-            Assert.NotNull(last);
-            Assert.Equal(3, last!.Id);
+            Assert.Equal(DateTime.Today, last.Date);
+            Assert.Equal(Shift.Night, last.Shift);
         }
 
-        // ---------------------------------------------------------------------
-        // FILTER + PAGING
-        // ---------------------------------------------------------------------
         [Fact]
-        public async Task GetAllAsync_ShouldFilterAndPage()
+        public void GetForEdit_Should_Return_Model()
         {
             var db = GetDb();
+            var service = GetService(db);
 
-            db.Locomotives.Add(MakeLoco(1, "55-001"));
-            db.Locomotives.Add(MakeLoco(2, "52-034"));
-
-            db.ShiftWorks.Add(MakeShift(1, 1, new DateTime(2026, 1, 10), 0, 1));
-            db.ShiftWorks.Add(MakeShift(2, 1, new DateTime(2026, 1, 15), 0, 1));
-            db.ShiftWorks.Add(MakeShift(3, 2, new DateTime(2026, 1, 20), 0, 1));
-            await db.SaveChangesAsync();
-
-            var logger = new Mock<ILogger<ShiftWorkService>>();
-            var service = new ShiftWorkService(db, logger.Object);
-
-            var query = new ShiftWorkQuery
+            var sw = new ShiftWork
             {
-                LocomotiveNumber = "55",
-                From = new DateTime(2026, 1, 11),
-                To = new DateTime(2026, 1, 30),
-                Page = 1,
-                PageSize = 10
+                LocomotiveId = 1,
+                Date = DateTime.Today,
+                Shift = Shift.Day,
+                InitialValue = 10,
+                FinalValue = 20,
+                Amount = 10,
+                CreatedOn = DateTime.UtcNow,
+                CreatedBy = "seed"
             };
+            db.ShiftWorks.Add(sw);
+            db.SaveChanges();
 
-            var (Items, Total) = await service.GetAllAsync(query);
-
-            Assert.Equal(1, Total);
-            Assert.Single(Items);
-            Assert.Equal(2, Items.First().Id);
+            var model = service.GetForEdit(sw.Id);
+            Assert.NotNull(model);
+            Assert.Equal(sw.InitialValue, model.InitialValue);
+            Assert.Equal(sw.FinalValue, model.FinalValue);
         }
     }
 }

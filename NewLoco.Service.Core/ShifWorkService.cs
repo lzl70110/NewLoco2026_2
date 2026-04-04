@@ -45,14 +45,35 @@ namespace NewLoco.Service.Core
             ShiftWorkQuery query,
             CancellationToken ct = default)
         {
-            var q = _db.ShiftWorks
+            // Safety
+            var page = Math.Max(1, query.Page);
+            var pageSize = Math.Max(1, query.PageSize);
+
+            IQueryable<ShiftWork> q;
+
+            if (query.IncludeDeleted)
+            {
+                q = _db.ShiftWorks
+                    .IgnoreQueryFilters(); // 🔥 CRITICAL FIX
+            }
+            else
+            {
+                q = _db.ShiftWorks
+                    .Where(sw => !sw.IsDeleted);
+            }
+
+            q = q
                 .AsNoTracking()
-                .Include(sw => sw.Locomotive)
-                .AsQueryable();
+                .Include(sw => sw.Locomotive);
+
+            // ------------------------------------------------------
+            // FILTERS
+            // ------------------------------------------------------
 
             if (!string.IsNullOrWhiteSpace(query.LocomotiveNumber))
             {
                 var number = query.LocomotiveNumber.Trim();
+
                 q = q.Where(sw =>
                     sw.Locomotive != null &&
                     sw.Locomotive.Number.Contains(number));
@@ -67,16 +88,19 @@ namespace NewLoco.Service.Core
                 q = q.Where(sw => sw.Date < next);
             }
 
-            if (!query.IncludeDeleted)
-                q = q.Where(sw => !sw.IsDeleted);
-
+            // ------------------------------------------------------
+            // COUNT
+            // ------------------------------------------------------
             var total = await q.CountAsync(ct);
 
+            // ------------------------------------------------------
+            // DATA
+            // ------------------------------------------------------
             var items = await q
                 .OrderByDescending(sw => sw.Date)
                 .ThenByDescending(sw => sw.Id)
-                .Skip((query.Page - 1) * query.PageSize)
-                .Take(query.PageSize)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(sw => new ShiftWorkDto
                 {
                     Id = sw.Id,
@@ -97,7 +121,7 @@ namespace NewLoco.Service.Core
         }
 
         // ----------------------------------------------------------
-        // GET LAST SHIFT (ONLY NON-DELETED)
+        // GET LAST SHIFT
         // ----------------------------------------------------------
         public async Task<ShiftWorkDto?> GetLastShiftAsync(int locomotiveId)
         {
@@ -206,7 +230,7 @@ namespace NewLoco.Service.Core
         }
 
         // ----------------------------------------------------------
-        // DELETE (SOFT DELETE)
+        // DELETE
         // ----------------------------------------------------------
         public async Task DeleteAsync(int id, string user)
         {

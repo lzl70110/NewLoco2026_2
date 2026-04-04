@@ -25,24 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{0B399F1F
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewLoco.Tests", "NewLoco.TestS\NewLoco.Tests.csproj", "{016C12BE-1526-4133-A7EB-34BBA4CF81D9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "screenshots", "screenshots", "{7316C4C8-03CF-4C85-B811-FD6AD05D2BE6}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\..\Pictures\admin-locomotives.png = ..\..\..\..\..\Pictures\admin-locomotives.png
-		..\..\..\..\..\Pictures\Screenshots\coverage.png = ..\..\..\..\..\Pictures\Screenshots\coverage.png
-		..\..\..\..\..\Pictures\Screenshots\fuel_index.png = ..\..\..\..\..\Pictures\Screenshots\fuel_index.png
-		..\..\..\..\..\Pictures\Screenshots\locomotive_form.png = ..\..\..\..\..\Pictures\Screenshots\locomotive_form.png
-		..\..\..\..\..\Pictures\Screenshots\login.png = ..\..\..\..\..\Pictures\Screenshots\login.png
-		..\..\..\..\..\Pictures\Screenshots\login_admin.png = ..\..\..\..\..\Pictures\Screenshots\login_admin.png
-		public-locomotives.png = public-locomotives.png
-		..\..\..\..\..\Pictures\Screenshots\shiftwork_list.png = ..\..\..\..\..\Pictures\Screenshots\shiftwork_list.png
-	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
-	ProjectSection(SolutionItems) = preProject
-		..\..\..\..\..\Downloads\README .md = ..\..\..\..\..\Downloads\README .md
-		..\..\..\..\..\Downloads\README_BG .md = ..\..\..\..\..\Downloads\README_BG .md
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

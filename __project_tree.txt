@@ -216,7 +216,6 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │       IShiftWorkService.cs
 │   │       LocomotiveDtos.cs
 │   │       ShiftWorkDto.cs
-│   │       ShiftWorkQuery.cs
 │   │       
 │   └───obj
 │       │   NewLoco.Service.Core.csproj.nuget.dgspec.json
@@ -610,7 +609,7 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │   │       TestDbContextFactory.cs
 │   │       
 │   └───TestResults
-│       └───e7f6f951-e6d0-4ada-a4f1-a6effee424c1
+│       └───5f9c2448-ea01-4991-b953-06dc445c06f2
 │               coverage.cobertura.xml
 │               
 ├───NewLoco.Web
@@ -1669,126 +1668,84 @@ C:\USERS\LYUBOMIR\DOCUMENTS\C#\ASP.NET\PROJECTS\NEWLOCO.WEB
 │                   jquery.validate.unobtrusive.min.js
 │                   LICENSE.txt
 │                   
-├───NewLoco.Web.ViewModels
-│   │   ErrorViewModel.cs
-│   │   NewLoco.Web.ViewModels.csproj
-│   │   
-│   ├───Axles
-│   │       AxleMeasurementCardDetailsViewModel.cs
-│   │       AxleMeasurementCardListViewModel.cs
-│   │       AxleMeasurementCardViewModel.cs
-│   │       AxleMeasurementValueDetailsViewModel.cs
-│   │       AxleMeasurementValueViewModel.cs
-│   │       
-│   ├───bin
-│   │   └───Debug
-│   │       └───net8.0
-│   │               GCommon.dll
-│   │               GCommon.pdb
-│   │               NewLoco.Data.Models.dll
-│   │               NewLoco.Data.Models.pdb
-│   │               NewLoco.Web.ViewModels.deps.json
-│   │               NewLoco.Web.ViewModels.dll
-│   │               NewLoco.Web.ViewModels.pdb
-│   │               
-│   ├───Fuels
-│   │       CreateFuelViewModel.cs
-│   │       FuelAllViewModel.cs
-│   │       FuelsBasicDetailsViewModel.cs
-│   │       
-│   ├───Locomotives
-│   │   │   CreateLocomotiveViewModel.cs
-│   │   │   EditLocomotiveViewModel.cs
-│   │   │   LocomotiveDetailsViewModel.cs
-│   │   │   LocomotiveFormModel.cs
-│   │   │   LocomotiveNumberViewModel.cs
-│   │   │   
-│   │   └───Interfaces
-│   │           ILocomotiveViewModel.cs
-│   │           
-│   ├───obj
-│   │   │   NewLoco.Web.ViewModels.csproj.nuget.dgspec.json
-│   │   │   NewLoco.Web.ViewModels.csproj.nuget.g.props
-│   │   │   NewLoco.Web.ViewModels.csproj.nuget.g.targets
-│   │   │   project.assets.json
-│   │   │   project.nuget.cache
-│   │   │   
-│   │   └───Debug
-│   │       └───net8.0
-│   │           │   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
-│   │           │   NewLoco..FD06AED1.Up2Date
-│   │           │   NewLoco.Web.ViewModels.AssemblyInfo.cs
-│   │           │   NewLoco.Web.ViewModels.AssemblyInfoInputs.cache
-│   │           │   NewLoco.Web.ViewModels.assets.cache
-│   │           │   NewLoco.Web.ViewModels.csproj.AssemblyReference.cache
-│   │           │   NewLoco.Web.ViewModels.csproj.BuildWithSkipAnalyzers
-│   │           │   NewLoco.Web.ViewModels.csproj.CoreCompileInputs.cache
-│   │           │   NewLoco.Web.ViewModels.csproj.FileListAbsolute.txt
-│   │           │   NewLoco.Web.ViewModels.dll
-│   │           │   NewLoco.Web.ViewModels.GeneratedMSBuildEditorConfig.editorconfig
-│   │           │   NewLoco.Web.ViewModels.GlobalUsings.g.cs
-│   │           │   NewLoco.Web.ViewModels.pdb
-│   │           │   NewLoco.Web.ViewModels.sourcelink.json
-│   │           │   
-│   │           ├───ref
-│   │           │       NewLoco.Web.ViewModels.dll
-│   │           │       
-│   │           └───refint
-│   │                   NewLoco.Web.ViewModels.dll
-│   │                   
-│   ├───Paging
-│   │       PagingInfo.cs
-│   │       
-│   └───ShiftWorks
-│           ConfirmFuelViewModel.cs
-│           CreateShiftWorkViewModel.cs
-│           EditShiftWorkViewModel.cs
-│           ShiftWorkFilterInput.cs
-│           ShiftWorkIndexViewModel.cs
-│           ShiftWorkListItemViewModel.cs
-│           ShiftWorksViewModel.cs
-│           ShiftWorksViewModelBase.cs
-│           
-└───ProjectTreeExporter
-    └───ProjectTreeExporter
-        │   Program.cs
-        │   
-        ├───bin
-        │   └───Debug
-        │       └───net8.0
-        │               ProjectTreeExporter.deps.json
-        │               ProjectTreeExporter.dll
-        │               ProjectTreeExporter.exe
-        │               ProjectTreeExporter.pdb
-        │               ProjectTreeExporter.runtimeconfig.json
-        │               project_tree.txt
-        │               project_tree_compact.txt
-        │               
-        └───obj
-            │   project.assets.json
-            │   project.nuget.cache
-            │   ProjectTreeExporter.csproj.nuget.dgspec.json
-            │   ProjectTreeExporter.csproj.nuget.g.props
-            │   ProjectTreeExporter.csproj.nuget.g.targets
-            │   
-            └───Debug
-                └───net8.0
-                    │   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
-                    │   apphost.exe
-                    │   ProjectTreeExporter.AssemblyInfo.cs
-                    │   ProjectTreeExporter.AssemblyInfoInputs.cache
-                    │   ProjectTreeExporter.assets.cache
-                    │   ProjectTreeExporter.csproj.CoreCompileInputs.cache
-                    │   ProjectTreeExporter.csproj.FileListAbsolute.txt
-                    │   ProjectTreeExporter.dll
-                    │   ProjectTreeExporter.GeneratedMSBuildEditorConfig.editorconfig
-                    │   ProjectTreeExporter.genruntimeconfig.cache
-                    │   ProjectTreeExporter.GlobalUsings.g.cs
-                    │   ProjectTreeExporter.pdb
-                    │   
-                    ├───ref
-                    │       ProjectTreeExporter.dll
-                    │       
-                    └───refint
-                            ProjectTreeExporter.dll
-                            
+└───NewLoco.Web.ViewModels
+    │   ErrorViewModel.cs
+    │   NewLoco.Web.ViewModels.csproj
+    │   
+    ├───Axles
+    │       AxleMeasurementCardDetailsViewModel.cs
+    │       AxleMeasurementCardListViewModel.cs
+    │       AxleMeasurementCardViewModel.cs
+    │       AxleMeasurementValueDetailsViewModel.cs
+    │       AxleMeasurementValueViewModel.cs
+    │       
+    ├───bin
+    │   └───Debug
+    │       └───net8.0
+    │               GCommon.dll
+    │               GCommon.pdb
+    │               NewLoco.Data.Models.dll
+    │               NewLoco.Data.Models.pdb
+    │               NewLoco.Web.ViewModels.deps.json
+    │               NewLoco.Web.ViewModels.dll
+    │               NewLoco.Web.ViewModels.pdb
+    │               
+    ├───Fuels
+    │       CreateFuelViewModel.cs
+    │       FuelAllViewModel.cs
+    │       FuelsBasicDetailsViewModel.cs
+    │       
+    ├───Locomotives
+    │   │   CreateLocomotiveViewModel.cs
+    │   │   EditLocomotiveViewModel.cs
+    │   │   LocomotiveDetailsViewModel.cs
+    │   │   LocomotiveFormModel.cs
+    │   │   LocomotiveNumberViewModel.cs
+    │   │   
+    │   └───Interfaces
+    │           ILocomotiveViewModel.cs
+    │           
+    ├───obj
+    │   │   NewLoco.Web.ViewModels.csproj.nuget.dgspec.json
+    │   │   NewLoco.Web.ViewModels.csproj.nuget.g.props
+    │   │   NewLoco.Web.ViewModels.csproj.nuget.g.targets
+    │   │   project.assets.json
+    │   │   project.nuget.cache
+    │   │   
+    │   └───Debug
+    │       └───net8.0
+    │           │   .NETCoreApp,Version=v8.0.AssemblyAttributes.cs
+    │           │   NewLoco..FD06AED1.Up2Date
+    │           │   NewLoco.Web.ViewModels.AssemblyInfo.cs
+    │           │   NewLoco.Web.ViewModels.AssemblyInfoInputs.cache
+    │           │   NewLoco.Web.ViewModels.assets.cache
+    │           │   NewLoco.Web.ViewModels.csproj.AssemblyReference.cache
+    │           │   NewLoco.Web.ViewModels.csproj.BuildWithSkipAnalyzers
+    │           │   NewLoco.Web.ViewModels.csproj.CoreCompileInputs.cache
+    │           │   NewLoco.Web.ViewModels.csproj.FileListAbsolute.txt
+    │           │   NewLoco.Web.ViewModels.dll
+    │           │   NewLoco.Web.ViewModels.GeneratedMSBuildEditorConfig.editorconfig
+    │           │   NewLoco.Web.ViewModels.GlobalUsings.g.cs
+    │           │   NewLoco.Web.ViewModels.pdb
+    │           │   NewLoco.Web.ViewModels.sourcelink.json
+    │           │   
+    │           ├───ref
+    │           │       NewLoco.Web.ViewModels.dll
+    │           │       
+    │           └───refint
+    │                   NewLoco.Web.ViewModels.dll
+    │                   
+    ├───Paging
+    │       PagingInfo.cs
+    │       
+    └───ShiftWorks
+            ConfirmFuelViewModel.cs
+            CreateShiftWorkViewModel.cs
+            EditShiftWorkViewModel.cs
+            ShiftWorkFilterInput.cs
+            ShiftWorkIndexViewModel.cs
+            ShiftWorkListItemViewModel.cs
+            ShiftWorkQuery.cs
+            ShiftWorksViewModel.cs
+            ShiftWorksViewModelBase.cs
+            

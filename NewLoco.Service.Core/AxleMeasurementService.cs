@@ -77,31 +77,19 @@ namespace NewLoco.Service.Core
         // --------------------------------------------------------
         public async Task<AxleMeasurementCardViewModel> GetCreateModelAsync()
         {
-            var locosVm = await _context.Locomotives
+            var locos = await _context.Locomotives
                 .OrderBy(l => l.Number)
-                .Select(l => new LocomotiveNumberViewModel
-                {
-                    Id = l.Id,
-                    Number = l.Number,
-                    LocomotiveType = l.LocomotiveType,
-                    MeasuringUnit = l.MeasuringUnit,
-                    AxlesCount = l.AxlesCount,
-                    Note = l.Note!
-                })
-                .ToListAsync();
-
-            var locosSelectList = locosVm
                 .Select(l => new SelectListItem
                 {
                     Value = l.Id.ToString(),
                     Text = l.Number
                 })
-                .ToList();
+                .ToListAsync();
 
             return new AxleMeasurementCardViewModel
             {
-                Locomotives = locosSelectList,
-                Axles = []
+                Locomotives = locos,
+                Axles = new List<AxleMeasurementValueViewModel>() // empty, filled by AJAX
             };
         }
 
@@ -118,6 +106,7 @@ namespace NewLoco.Service.Core
             int? last = await _context.AxleMeasurementCards
                 .Where(c => c.Year == year)
                 .MaxAsync(c => (int?)c.SequenceNumber);
+
             int nextSequence = (last ?? 0) + 1;
 
             var card = new AxleMeasurementCard
@@ -129,10 +118,15 @@ namespace NewLoco.Service.Core
                 SequenceNumber = nextSequence,
                 CreatedOn = DateTime.UtcNow,
                 CreatedBy = createdBy,
-                Axles = [.. model.Axles
-                    .Where(a => a.Ar.HasValue || a.Sd_Left.HasValue || a.Sd_Right.HasValue
-                             || a.Sh_Left.HasValue || a.Sh_Right.HasValue
-                             || a.QR_Left.HasValue || a.QR_Right.HasValue)
+                Axles = model.Axles
+                    .Where(a =>
+                        a.Ar.HasValue ||
+                        a.Sd_Left.HasValue ||
+                        a.Sd_Right.HasValue ||
+                        a.Sh_Left.HasValue ||
+                        a.Sh_Right.HasValue ||
+                        a.QR_Left.HasValue ||
+                        a.QR_Right.HasValue)
                     .OrderBy(a => a.AxleNumber)
                     .Select(a => new AxleMeasurementValue
                     {
@@ -145,11 +139,13 @@ namespace NewLoco.Service.Core
                         qR_Right = a.QR_Right ?? 0,
                         Ar = a.Ar ?? 0,
                         Sr = a.Sr ?? 0
-                    })]
+                    })
+                    .ToList()
             };
 
             _context.AxleMeasurementCards.Add(card);
             await _context.SaveChangesAsync();
+
             return card.Id;
         }
 
@@ -163,12 +159,12 @@ namespace NewLoco.Service.Core
                 .FirstOrDefaultAsync(c => c.Id == id)
                 ?? throw new ArgumentException("Card not found.");
 
-            var model = new AxleMeasurementCardViewModel
+            return new AxleMeasurementCardViewModel
             {
                 Id = card.Id,
                 SelectedLocomotiveId = card.SelectedLocomotiveId,
                 MeasurementDate = card.MeasurementDate,
-                Axles = [.. card.Axles
+                Axles = card.Axles
                     .OrderBy(a => a.AxleNumber)
                     .Select(a => new AxleMeasurementValueViewModel
                     {
@@ -181,10 +177,9 @@ namespace NewLoco.Service.Core
                         QR_Right = a.qR_Right,
                         Ar = a.Ar,
                         Sr = a.Sr
-                    })]
+                    })
+                    .ToList()
             };
-
-            return model;
         }
 
         // --------------------------------------------------------
@@ -209,10 +204,15 @@ namespace NewLoco.Service.Core
 
             CalculateSr(model);
 
-            card.Axles = [.. model.Axles
-                .Where(a => a.Ar.HasValue || a.Sd_Left.HasValue || a.Sd_Right.HasValue
-                         || a.Sh_Left.HasValue || a.Sh_Right.HasValue
-                         || a.QR_Left.HasValue || a.QR_Right.HasValue)
+            card.Axles = model.Axles
+                .Where(a =>
+                    a.Ar.HasValue ||
+                    a.Sd_Left.HasValue ||
+                    a.Sd_Right.HasValue ||
+                    a.Sh_Left.HasValue ||
+                    a.Sh_Right.HasValue ||
+                    a.QR_Left.HasValue ||
+                    a.QR_Right.HasValue)
                 .OrderBy(a => a.AxleNumber)
                 .Select(a => new AxleMeasurementValue
                 {
@@ -225,9 +225,21 @@ namespace NewLoco.Service.Core
                     qR_Right = a.QR_Right ?? 0,
                     Ar = a.Ar ?? 0,
                     Sr = a.Sr ?? 0
-                })];
+                })
+                .ToList();
 
             await _context.SaveChangesAsync();
+        }
+
+        // --------------------------------------------------------
+        // AJAX helper (NEW)
+        // --------------------------------------------------------
+        public async Task<int> GetAxlesCountAsync(int locoId)
+        {
+            return await _context.Locomotives
+                .Where(l => l.Id == locoId)
+                .Select(l => l.AxlesCount)
+                .FirstAsync();
         }
 
         // --------------------------------------------------------
@@ -235,12 +247,17 @@ namespace NewLoco.Service.Core
         // --------------------------------------------------------
         public void CalculateSr(AxleMeasurementCardViewModel model)
         {
-            if (model?.Axles == null) return;
+            if (model?.Axles == null)
+                return;
 
             foreach (var ax in model.Axles)
             {
-                if (ax.Ar.HasValue && ax.Sd_Left.HasValue && ax.Sd_Right.HasValue)
+                if (ax.Ar.HasValue &&
+                    ax.Sd_Left.HasValue &&
+                    ax.Sd_Right.HasValue)
+                {
                     ax.Sr = ax.Ar.Value + ax.Sd_Left.Value + ax.Sd_Right.Value;
+                }
             }
         }
     }

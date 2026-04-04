@@ -76,6 +76,44 @@ Features:
 ### ShiftWork Overview  
 ./screenshots/shiftworks-index.png
 
+# 🔧 Axle Measurements Module
+
+This module manages detailed axle diagnostics for each locomotive.  
+It includes full CRUD functionality, dynamic UI rendering, and business-specific validation.
+
+### Create Axle Measurement Card  
+./screenshots/axle_create.png
+
+### Edit Axle Measurement Card  
+./screenshots/axle_edit.png
+
+## ✅ Features
+
+- Dynamic axle table rendered automatically based on the selected locomotive  
+- AJAX request (`GetAxleInputs`) loads the correct number of axles without page refresh  
+- Full server-side validation (required fields, numeric constraints)  
+- Automatic SR calculation on the server (SR = AR + SD_Left + SD_Right)  
+- Filtering out empty axle rows during save  
+- Document numbering (Year + Sequence per year)  
+- List, Details, Create, Edit views  
+- Permissions-based access (Repairs.View / Repairs.Create)
+
+## ✅ Technical Notes
+
+- Two EF Core entities:  
+  - `AxleMeasurementCard`  
+  - `AxleMeasurementValue`  
+- Configured with Fluent API (ordering, precision, relationships)  
+- Fully integrated with EF Core migrations  
+- Clean separation via `AxleMeasurementService` and specific ViewModels  
+- Unobtrusive validation enabled for dynamic HTML loaded via AJAX
+
+## ✅ Future Extensions (optional)
+- Client-side real-time SR calculation  
+- Inline validation feedback  
+- Add/remove axle rows dynamically  
+- Trend charts for past measurements
+
 ---
 # 🧱 Architecture Overview
 

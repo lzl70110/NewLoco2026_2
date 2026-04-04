@@ -62,7 +62,7 @@
                 return;
             }
 
-            fetch(`/AxleMeasurements/GetAxles?locomotiveId=${locoId}`)
+           fetch(`/AxleMeasurements/GetAxleInputs?locoId=${locoId}`)
                 .then(r => r.text())
                 .then(html => {
                     axlesContainer.innerHTML = html;

@@ -14,6 +14,9 @@ namespace NewLoco.Web.Controllers
         private readonly IAxleMeasurementService _service = service;
         private readonly ILogger<AxleMeasurementsController> _logger = logger;
 
+        // --------------------------------------------------------
+        // LIST
+        // --------------------------------------------------------
         [Authorize(Policy = Perm.Repairs.View)]
         public async Task<IActionResult> Index()
         {
@@ -21,6 +24,9 @@ namespace NewLoco.Web.Controllers
             return View(cards);
         }
 
+        // --------------------------------------------------------
+        // DETAILS
+        // --------------------------------------------------------
         [Authorize(Policy = Perm.Repairs.View)]
         public async Task<IActionResult> Details(int id)
         {
@@ -37,6 +43,9 @@ namespace NewLoco.Web.Controllers
             }
         }
 
+        // --------------------------------------------------------
+        // CREATE (GET)
+        // --------------------------------------------------------
         [Authorize(Policy = Perm.Repairs.Create)]
         [HttpGet]
         public async Task<IActionResult> Create()
@@ -45,6 +54,9 @@ namespace NewLoco.Web.Controllers
             return View(vm);
         }
 
+        // --------------------------------------------------------
+        // CREATE (POST)
+        // --------------------------------------------------------
         [Authorize(Policy = Perm.Repairs.Create)]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -65,6 +77,9 @@ namespace NewLoco.Web.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        // --------------------------------------------------------
+        // EDIT (GET)
+        // --------------------------------------------------------
         [Authorize(Policy = Perm.Repairs.Create)]
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
@@ -82,6 +97,9 @@ namespace NewLoco.Web.Controllers
             }
         }
 
+        // --------------------------------------------------------
+        // EDIT (POST)
+        // --------------------------------------------------------
         [Authorize(Policy = Perm.Repairs.Create)]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -107,6 +125,25 @@ namespace NewLoco.Web.Controllers
                 var vm = await _service.GetEditModelAsync(model.Id);
                 return View(vm);
             }
+        }
+
+        // --------------------------------------------------------
+        // AJAX — RETURN AXLE TABLE FOR SELECTED LOCOMOTIVE
+        // --------------------------------------------------------
+        [Authorize(Policy = Perm.Repairs.Create)]
+        [HttpGet]
+        public async Task<IActionResult> GetAxleInputs(int locoId)
+        {
+            var axlesCount = await _service.GetAxlesCountAsync(locoId);
+
+            var axles = Enumerable.Range(1, axlesCount)
+                .Select(n => new AxleMeasurementValueViewModel
+                {
+                    AxleNumber = n
+                })
+                .ToList();
+
+            return PartialView("_AxlesTable", axles);
         }
     }
 }

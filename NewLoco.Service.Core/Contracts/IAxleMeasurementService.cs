@@ -15,5 +15,8 @@ namespace NewLoco.Service.Core.Contracts
 
         // Business logic helper
         void CalculateSr(AxleMeasurementCardViewModel model);
+
+        // AJAX helper
+        Task<int> GetAxlesCountAsync(int locoId);
     }
 }

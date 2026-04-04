@@ -6,7 +6,7 @@ public interface ILocomotiveService
 {
     Task<LocomotiveType> GetTypeAsync(int locomotiveId);                 // keep exact signature
     Task<IEnumerable<LocoNumberDto>> GetAllAsync(string? filter);
-    Task<LocoDetailsDto?> GetDetailsAsync(int id);
+    Task<LocoDetailsDto> GetDetailsAsync(int id);
 
     Task CreateAsync(LocomotiveFormDto model, string user);
     Task<LocomotiveFormDto?> GetForEditAsync(int id);

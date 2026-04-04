@@ -13,7 +13,8 @@ namespace NewLoco.Data.Models
         public decimal InitialValue { get; set; }
         public decimal FinalValue { get; set; }
         public decimal Amount { get; set; }
+        public bool IsWorkDay { get; set; }
 
-       
+
     }
 }

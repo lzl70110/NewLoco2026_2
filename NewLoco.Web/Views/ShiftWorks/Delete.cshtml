@@ -1,0 +1,53 @@
+﻿@model NewLoco.Web.ViewModels.ShiftWorks.EditShiftWorkViewModel
+
+@{
+    ViewData["Title"] = "Delete Shift Work";
+}
+
+<h2 class="mb-3 text-danger">Delete Shift Work</h2>
+
+<div class="alert alert-warning">
+    <strong>Warning!</strong> This operation will mark the shift as deleted (soft delete).
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-danger text-white">
+        Confirm Deletion
+    </div>
+    <div class="card-body">
+
+        <dl class="row">
+            <dt class="col-sm-3">Locomotive</dt>
+            <dd class="col-sm-9">@Model.LocomotiveId</dd>
+
+            <dt class="col-sm-3">Date</dt>
+            <dd class="col-sm-9">@Model.Date.ToString("yyyy-MM-dd")</dd>
+
+            <dt class="col-sm-3">Shift</dt>
+            <dd class="col-sm-9">@Model.Shift</dd>
+
+            <dt class="col-sm-3">Initial Value</dt>
+            <dd class="col-sm-9">@Model.InitialValue</dd>
+
+            <dt class="col-sm-3">Final Value</dt>
+            <dd class="col-sm-9">@Model.FinalValue</dd>
+
+            <dt class="col-sm-3">Amount</dt>
+            <dd class="col-sm-9">@Model.FinalValue - @Model.InitialValue</dd>
+
+            <dt class="col-sm-3">Note</dt>
+            <dd class="col-sm-9">@Model.Note</dd>
+        </dl>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Delete
+            </button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Cancel
+            </a>
+        </form>
+
+    </div>
+</div>

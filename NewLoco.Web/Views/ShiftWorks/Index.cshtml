@@ -1,21 +1,17 @@
 ﻿@model NewLoco.Web.ViewModels.ShiftWorks.ShiftWorkIndexViewModel
 @using System.Globalization
+@using GCommon.Enums
 
 @{
     ViewData["Title"] = "Shift Works";
-
-    // FIXED: now uses DateTime?, not DateOnly?
-    string? AsDate(DateTime? d) => d.HasValue
-        ? d.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)
-        : null;
+    string? AsDate(DateTime? d) => d.HasValue ? d.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : null;
 }
 
 <h2 class="h5 mb-3">@ViewData["Title"]</h2>
 
 @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
 {
-    <div class="alert alert-success alert-dismissible fade show d-inline-flex align-items-center gap-2 py-1 px-2"
-         role="alert" style="max-width: 480px;">
+    <div class="alert alert-success alert-dismissible fade show d-inline-flex align-items-center gap-2 py-1 px-2" role="alert" style="max-width: 480px;">
         <span>@ok</span>
         <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -25,56 +21,59 @@
     <a asp-controller="ShiftWorks" asp-action="Create" class="btn btn-primary btn-sm">
         <i class="bi bi-plus-circle"></i> New Shift
     </a>
+
+    <form method="get" class="d-flex gap-2">
+        <select name="ShowMode" class="form-select form-select-sm" onchange="this.form.submit();">
+            @foreach (ShiftWorkShowMode mode in Enum.GetValues(typeof(ShiftWorkShowMode)))
+            {
+                if (mode == Model.Filter.ShowMode)
+                {
+                    @:
+                    <option value="@mode" selected>@mode</option>
+                }
+                else
+                {
+                    @:
+                    <option value="@mode">@mode</option>
+                }
+            }
+        </select>
+    </form>
 </div>
 
 <form method="get" class="row g-2 align-items-end mb-3">
     <div class="col-sm-3">
         <label class="form-label mb-1">Locomotive number</label>
-        <input name="LocomotiveNumber"
-               class="form-control"
-               value="@Model.Filter.LocomotiveNumber"
-               placeholder="e.g. 55-200, 06-..." />
+        <input name="LocomotiveNumber" class="form-control" value="@Model.Filter.LocomotiveNumber" placeholder="e.g. 55-200, 06-..." />
     </div>
-
     <div class="col-sm-2">
         <label class="form-label mb-1">From (date)</label>
         <input type="date" name="From" class="form-control" value="@AsDate(Model.Filter.From)" />
     </div>
-
     <div class="col-sm-2">
         <label class="form-label mb-1">To (date)</label>
         <input type="date" name="To" class="form-control" value="@AsDate(Model.Filter.To)" />
     </div>
-
     <div class="col-sm-2">
         <label class="form-label mb-1">Page size</label>
         <select name="PageSize" class="form-select">
-            @{
-                var sizes = new[] { 10, 20, 50, 100 };
-                foreach (var s in sizes)
+            @foreach (var s in new[] { 10, 20, 50, 100 })
+            {
+                if (s == Model.Paging.PageSize)
                 {
-                    <option value="@s" selected="@(Model.Paging.PageSize == s)">@s</option>
+                    @:
+                    <option value="@s" selected>@s</option>
+                }
+                else
+                {
+                    @:
+                    <option value="@s">@s</option>
                 }
             }
         </select>
     </div>
-
-    @* Only for SysAdmin *@
-    @if (User.IsInRole("SysAdmin"))
-    {
-        <div class="col-sm-2 form-check mt-4">
-            <input class="form-check-input" type="checkbox" id="incDel" name="IncludeDeleted" value="true"
-                   checked="@(Model.Filter.IncludeDeleted)" />
-            <input type="hidden" name="IncludeDeleted" value="false" />
-            <label class="form-check-label" for="incDel">Include deleted</label>
-        </div>
-    }
-
     <div class="col-sm-3 d-flex gap-2">
-        <button type="submit" class="btn btn-secondary">
-            <i class="bi bi-search me-1"></i> Search
-        </button>
-
+        <button type="submit" class="btn btn-secondary"><i class="bi bi-search me-1"></i> Search</button>
         <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
     </div>
 </form>
@@ -83,74 +82,55 @@
     <table class="table table-sm table-bordered table-striped align-middle">
         <thead class="table-light">
             <tr>
-                <th style="width:50px;">Date</th>
-                <th style="width:60px;">Shift</th>
-                <th style="width:100px;">Locomotive</th>
-               @*  <th style="width:100px;">Operator</th> *@
-                <th style="width:80px;" class="text-end">Start</th>
-                <th style="width:80px;" class="text-end">Final</th>
-                <th style="width:80px;" class="text-end">Total</th>
-                <th style="text-align:center; width:180px;">Note</th>
-                @if (Model.Filter.IncludeDeleted)
-                {
-                    <th style="text-align:center; width:70px;">Status</th>
-                }
-                <th style="width:170px; text-align:center;">Actions</th>
+                <th>Date</th>
+                <th>Shift</th>
+                <th>Locomotive</th>
+                <th class="text-end">Start</th>
+                <th class="text-end">Final</th>
+                <th class="text-end">Total</th>
+                <th>Note</th>
+                <th class="text-center">Actions</th>
             </tr>
         </thead>
-
         <tbody>
-            @if (Model.Items == null || !Model.Items.Any())
+            @if (!Model.Items.Any())
             {
                 <tr>
-                    <td colspan="@(Model.Filter.IncludeDeleted ? 10 : 9)" class="text-center text-muted py-3">No records</td>
+                    <td colspan="8" class="text-center text-muted py-3">No records</td>
                 </tr>
             }
             else
             {
                 foreach (var x in Model.Items)
                 {
-                    <tr class="@(x.IsDeleted ? "table-danger" : "")">
+                    var rowClass = x.IsDeleted ? "table-danger" : "";
+
+                    <tr class="@rowClass">
                         <td>@x.Date.ToString("dd.MM")</td>
                         <td>@x.Shift</td>
                         <td>@x.LocomotiveNumber</td>
-                   @*      <td>@x.Operator</td> *@
-
                         <td class="text-end">@x.InitialValue</td>
                         <td class="text-end">@x.FinalValue</td>
                         <td class="text-end fw-semibold">@x.Amount</td>
-
-                        <td class="text-truncate" style="max-width:300px;">@x.Note</td>
-
-                        @if (Model.Filter.IncludeDeleted)
-                        {
-                            <td class="text-center">@((x.IsDeleted ? "Deleted" : "Active"))</td>
-                        }
-
+                        <td class="text-truncate" style="max-width: 300px;">@x.Note</td>
                         <td class="text-center">
                             <div class="d-flex justify-content-center gap-1">
-                                <a asp-controller="ShiftWorks" asp-action="Edit" asp-route-id="@x.Id"
-                                   class="btn btn-outline-primary btn-sm">Edit</a>
-
                                 @if (!x.IsDeleted)
                                 {
-                                    <form asp-controller="ShiftWorks" asp-action="Delete" asp-route-id="@x.Id"
-                                          method="post" class="m-0">
+                                    <a asp-action="Edit" asp-route-id="@x.Id" class="btn btn-outline-primary btn-sm">Edit</a>
+
+                                    <form asp-action="Delete" asp-route-id="@x.Id" method="post" class="m-0">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-danger btn-sm"
-                                                onclick="return confirm('Delete this shift?');">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this shift?');">
                                             Delete
                                         </button>
                                     </form>
                                 }
                                 else
                                 {
-                                    <form asp-controller="ShiftWorks" asp-action="UndoDelete" asp-route-id="@x.Id"
-                                          method="post" class="m-0">
+                                    <form asp-action="UndoDelete" asp-route-id="@x.Id" method="post" class="m-0">
                                         @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-outline-success btn-sm">
-                                            Restore
-                                        </button>
+                                        <button type="submit" class="btn btn-outline-success btn-sm">Restore</button>
                                     </form>
                                 }
                             </div>
@@ -162,53 +142,23 @@
     </table>
 </div>
 
-@{
-    var keepNum = Model.Filter.LocomotiveNumber;
-    var keepFrom = AsDate(Model.Filter.From);
-    var keepTo = AsDate(Model.Filter.To);
-    var keepInc = Model.Filter.IncludeDeleted;
-    var size = Model.Paging.PageSize;
-    var page = Model.Paging.PageNumber;
-}
-
 @if (Model.Paging.TotalPages > 1)
 {
     <nav aria-label="ShiftWorks pagination">
         <ul class="pagination pagination-sm">
             <li class="page-item @(Model.Paging.HasPrevious ? "" : "disabled")">
-                <a class="page-link"
-                   asp-action="Index"
-                   asp-route-Page="@(page - 1)"
-                   asp-route-PageSize="@size"
-                   asp-route-LocomotiveNumber="@keepNum"
-                   asp-route-From="@keepFrom"
-                   asp-route-To="@keepTo"
-                   asp-route-IncludeDeleted="@keepInc">Prev</a>
+                <a class="page-link" asp-action="Index" asp-route-Page="@(Model.Paging.PageNumber - 1)" asp-route-PageSize="@Model.Paging.PageSize">Prev</a>
             </li>
 
             @for (var p = 1; p <= Model.Paging.TotalPages; p++)
             {
                 <li class="page-item @(Model.Paging.PageNumber == p ? "active" : "")">
-                    <a class="page-link"
-                       asp-action="Index"
-                       asp-route-Page="@p"
-                       asp-route-PageSize="@size"
-                       asp-route-LocomotiveNumber="@keepNum"
-                       asp-route-From="@keepFrom"
-                       asp-route-To="@keepTo"
-                       asp-route-IncludeDeleted="@keepInc">@p</a>
+                    <a class="page-link" asp-action="Index" asp-route-Page="@p" asp-route-PageSize="@Model.Paging.PageSize">@p</a>
                 </li>
             }
 
             <li class="page-item @(Model.Paging.HasNext ? "" : "disabled")">
-                <a class="page-link"
-                   asp-action="Index"
-                   asp-route-Page="@(page + 1)"
-                   asp-route-PageSize="@size"
-                   asp-route-LocomotiveNumber="@keepNum"
-                   asp-route-From="@keepFrom"
-                   asp-route-To="@keepTo"
-                   asp-route-IncludeDeleted="@keepInc">Next</a>
+                <a class="page-link" asp-action="Index" asp-route-Page="@(Model.Paging.PageNumber + 1)" asp-route-PageSize="@Model.Paging.PageSize">Next</a>
             </li>
         </ul>
     </nav>

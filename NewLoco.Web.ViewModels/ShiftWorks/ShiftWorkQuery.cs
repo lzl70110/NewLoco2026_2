@@ -1,4 +1,6 @@
-﻿namespace NewLoco.Web.ViewModels.ShiftWorks
+﻿using GCommon.Enums;
+
+namespace NewLoco.Web.ViewModels.ShiftWorks
 {
     public class ShiftWorkQuery
     {
@@ -8,7 +10,7 @@
         public DateTime? To { get; set; }
 
         public bool IncludeDeleted { get; set; } = false;
-
+        public ShiftWorkShowMode ShowMode { get; set; } = ShiftWorkShowMode.Active;
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }

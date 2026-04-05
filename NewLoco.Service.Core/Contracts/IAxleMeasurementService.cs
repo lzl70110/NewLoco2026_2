@@ -1,4 +1,5 @@
-﻿using NewLoco.Web.ViewModels.Axles;
+﻿using NewLoco.Data.Models;
+using NewLoco.Web.ViewModels.Axles;
 
 namespace NewLoco.Service.Core.Contracts
 {
@@ -18,5 +19,10 @@ namespace NewLoco.Service.Core.Contracts
 
         // AJAX helper
         Task<int> GetAxlesCountAsync(int locoId);
+
+        IQueryable<AxleMeasurementCard> Query();
+
+        Task DeleteAsync(int id);
+        Task RestoreAsync(int id);
     }
 }

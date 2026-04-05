@@ -7,4 +7,5 @@ public class AxleMeasurementCardListViewModel
     public string LocomotiveNumber { get; set; } = null!;
     public DateTime MeasurementDate { get; set; }
     public int AxleCount { get; set; }
+    public bool IsDeleted { get; set; }
 }

@@ -26,7 +26,8 @@ namespace NewLoco.Service.Core
                     DocumentNumber = c.DocumentNumber,
                     LocomotiveNumber = c.Locomotive.Number,
                     MeasurementDate = c.MeasurementDate,
-                    AxleCount = c.AxleCount
+                    AxleCount = c.AxleCount,
+                    IsDeleted= c.IsDeleted
                 })
                 .ToListAsync();
         }
@@ -259,6 +260,27 @@ namespace NewLoco.Service.Core
                     ax.Sr = ax.Ar.Value + ax.Sd_Left.Value + ax.Sd_Right.Value;
                 }
             }
+        }
+
+        public IQueryable<AxleMeasurementCard> Query()
+             => _context.AxleMeasurementCards
+             .Include(c => c.Locomotive)
+             .AsQueryable();
+
+        public async Task DeleteAsync(int id)
+        {
+            var card = await _context.AxleMeasurementCards.FindAsync(id);
+            if (card == null) return;
+            card.IsDeleted = true;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RestoreAsync(int id)
+        {
+            var card = await _context.AxleMeasurementCards.FindAsync(id);
+            if (card == null) return;
+            card.IsDeleted = false;
+            await _context.SaveChangesAsync();
         }
     }
 }

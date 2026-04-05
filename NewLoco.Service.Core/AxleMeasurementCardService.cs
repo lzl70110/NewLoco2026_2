@@ -42,5 +42,24 @@ namespace NewLoco.Service.Core
 
             return model;
         }
+        public async Task DeleteAsync(int id)
+        {
+            var card = await _context.AxleMeasurementCards.FindAsync(id);
+            if (card != null)
+            {
+                card.IsDeleted = true;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task RestoreAsync(int id)
+        {
+            var card = await _context.AxleMeasurementCards.FindAsync(id);
+            if (card != null)
+            {
+                card.IsDeleted = false;
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
